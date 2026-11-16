@@ -1,0 +1,117 @@
+@import "tailwindcss";
+
+/*
+ * Colour tokens are CSS variables set at runtime from data/config.json
+ * (see components/Viewer.tsx). The values below are the "moderne" fallback so
+ * the very first paint is already correct.
+ */
+@theme inline {
+  --color-bg: var(--c-bg);
+  --color-surface: var(--c-surface);
+  --color-surface-2: var(--c-surface2);
+  --color-line: var(--c-border);
+  --color-ink: var(--c-text);
+  --color-muted: var(--c-text-muted);
+  --color-accent: var(--c-accent);
+  --color-accent-contrast: var(--c-accent-text);
+  --color-accent-soft: var(--c-accent-soft);
+  --color-ok: var(--c-success);
+  --color-warn: var(--c-warning);
+  --color-bad: var(--c-danger);
+  --color-info: var(--c-info);
+
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+}
+
+:root {
+  --c-bg: #fafafa;
+  --c-surface: #ffffff;
+  --c-surface2: #f4f4f5;
+  --c-border: #e8e8ec;
+  --c-text: #18181b;
+  --c-text-muted: #71717a;
+  --c-accent: #18181b;
+  --c-accent-text: #ffffff;
+  --c-accent-soft: #f0f0f2;
+  --c-success: #16a34a;
+  --c-warning: #d97706;
+  --c-danger: #dc2626;
+  --c-info: #2563eb;
+  --c-shadow: 0 1px 2px rgb(0 0 0 / 0.04), 0 12px 32px rgb(0 0 0 / 0.05);
+
+  color-scheme: light;
+}
+
+:root[data-mode="dark"] {
+  color-scheme: dark;
+}
+
+html,
+body {
+  min-height: 100%;
+}
+
+body {
+  background: var(--c-bg);
+  color: var(--c-text);
+  font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  transition: background-color 0.25s ease, color 0.25s ease;
+}
+
+.card {
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
+  box-shadow: var(--c-shadow);
+}
+
+.tnum {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Thin, theme-aware scrollbars */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--c-border) transparent;
+}
+*::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+*::-webkit-scrollbar-thumb {
+  background: var(--c-border);
+  border-radius: 999px;
+  border: 3px solid transparent;
+  background-clip: content-box;
+}
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+@keyframes pulse-dot {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.25;
+  }
+}
+.live-dot {
+  animation: pulse-dot 1.8s ease-in-out infinite;
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.rise {
+  animation: rise 0.22s ease-out both;
+}
