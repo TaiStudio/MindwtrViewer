@@ -19,10 +19,13 @@ export default function CalendarView({
   tasks,
   locale,
   defaultField,
+  onOpenTask,
 }: {
   tasks: Task[];
   locale: ResolvedLocale;
   defaultField: DateField;
+  /** Opens the task modal. */
+  onOpenTask?: (task: Task) => void;
 }) {
   const tr = locale.dict;
   const [cursor, setCursor] = useState(() => new Date());
@@ -213,6 +216,13 @@ export default function CalendarView({
                   <span className="tnum w-9 shrink-0 text-right text-[11px] text-muted">
                     {Math.round(task.progress * 100)}%
                   </span>
+                  <button
+                    type="button"
+                    onClick={() => onOpenTask?.(task)}
+                    className="ml-auto rounded-lg border border-line px-2 py-1 text-[11px] text-muted transition-colors hover:border-accent hover:text-ink"
+                  >
+                    {tr.open}
+                  </button>
                 </div>
                 <TaskDetail task={task} locale={locale} />
               </div>

@@ -2,9 +2,18 @@ import { promises as fs } from "node:fs";
 import path from "node:path";
 
 import { discoverLocales, discoverThemes } from "./discover";
-import { extractTasks, normalizeTasks } from "./derive";
+import { applyVisibility, extractTasks, normalizeTasks } from "./derive";
 import { mergeConfig } from "./defaults";
-import type { AppConfig, DataSet, RawTask } from "./types";
+import { extractReferences, mergeContexts } from "./references";
+import type { AppConfig, DataSet, RawTask, ReferenceData, Task } from "./types";
+
+const EMPTY_REFERENCES: ReferenceData = {
+  areas: [],
+  people: [],
+  projects: [],
+  sections: [],
+  contexts: [],
+};
 
 const DATA_DIR = path.join(process.cwd(), "data");
 
@@ -41,6 +50,7 @@ export async function loadDataSet(): Promise<DataSet> {
   }
 
   let rawTasks: RawTask[] = [];
+  let references: ReferenceData = EMPTY_REFERENCES;
   let tasksMtime: string | null = null;
   let error: string | undefined;
 
@@ -48,17 +58,28 @@ export async function loadDataSet(): Promise<DataSet> {
     const data = await readJsonFile("tasks.json");
     tasksMtime = data.mtime;
     rawTasks = extractTasks(data.value);
+    references = extractReferences(data.value);
   } catch (err) {
     error = err instanceof Error ? err.message : String(err);
   }
 
+  const allTasks: Task[] = normalizeTasks(rawTasks);
+
+  // Contexts = declared taxonomy ∪ contexts actually used by the tasks.
+  const usedContexts = allTasks.flatMap((t) => t.contexts);
+  references = { ...references, contexts: mergeContexts(references.contexts, usedContexts) };
+
+  // `hideDeleted` / `hideArchived` (config.json) decide what stays visible.
+  const tasks = applyVisibility(allTasks, config);
+
   return {
     ok: !error,
     ...(error ? { error } : {}),
-    tasks: normalizeTasks(rawTasks),
+    tasks,
     config,
     locales,
     themes,
+    references,
     sources: { tasks: tasksMtime, config: configMtime },
     generatedAt,
   };

@@ -5,5 +5,19 @@
   "refreshIntervalMs": 4000,
   "calendar": {
     "dateField": "updatedAt"
-  }
+  },
+  "references": {
+    "label": null,
+    "hideEmpty": true,
+    "groups": {
+      "tasks": { "hidden": false, "label": null },
+      "areas": { "hidden": false, "label": null },
+      "people": { "hidden": false, "label": null },
+      "projects": { "hidden": false, "label": null },
+      "sections": { "hidden": false, "label": null },
+      "contexts": { "hidden": false, "label": null }
+    }
+  },
+  "hideDeleted": true,
+  "hideArchived": false
 }

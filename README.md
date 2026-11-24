@@ -1,6 +1,8 @@
 # Mindwtr Viewer
 
-Site Next.js pour visualiser `data/tasks.json` sous plusieurs angles : **tableau (kanban)**, **calendrier**, **roadmap** et **liste de tâches**, avec les avancements (checklists) partout.
+Site Next.js pour visualiser `data/tasks.json` sous plusieurs angles : **tableau (kanban)**, **calendrier**, **roadmap**, **liste de tâches** et **références**, avec les avancements (checklists) partout.
+
+Cliquez n'importe quelle tâche (carte, ligne, barre de roadmap, entrée de référence) pour l'ouvrir dans une **modale** : description en **Markdown** rendue proprement (titres, tableaux, listes, liens…), checklist, métadonnées et **pièces jointes** avec aperçu image.
 
 ## Démarrage
 
@@ -32,17 +34,88 @@ Chaque tâche est affichée avec :
   "language": "fr",                       // code d'une langue de lib/i18n/ — langue par défaut
   "theme": "moderne",                     // id d'un thème de lib/themes/ — thème par défaut
   "refreshIntervalMs": 4000,              // fréquence de rechargement (500–60000)
-  "calendar": { "dateField": "updatedAt" } // "createdAt" | "updatedAt"
+  "calendar": { "dateField": "updatedAt" }, // "createdAt" | "updatedAt"
+
+  "references": {                         // onglet Références (voir ci-dessous)
+    "label": null,                        //   nom de l'onglet
+    "hideEmpty": true,                    //   masquer groupes vides + entrées à 0 tâche
+    "groups": {                           //   un bloc par groupe :
+      "tasks":    { "hidden": false, "label": null },   // Tâches de référence
+      "areas":    { "hidden": false, "label": null },   // Domaines
+      "people":   { "hidden": false, "label": null },   // Personnes
+      "projects": { "hidden": false, "label": null },   // Projets
+      "sections": { "hidden": false, "label": null },   // Sections
+      "contexts": { "hidden": false, "label": null }    // Contextes
+    }
+  },
+
+  "hideDeleted": true,                    // masquer les tâches avec deletedAt (défaut)
+  "hideArchived": false                   // masquer les tâches avec archivedAt
 }
 ```
 
 - Un fichier `config.json` **vide ou partiel** fonctionne : les valeurs manquantes prennent les défauts internes (`lib/defaults.ts`).
 - **Les langues et les thèmes ne se déclarent plus ici** : ils sont découverts dans les dossiers dédiés (voir ci-dessous). Ce fichier ne fait que choisir les défauts.
 - La langue et le thème choisis dans l'interface sont mémorisés dans le navigateur (`localStorage`) et priment sur `config.json`.
+- `label` accepte une **chaîne fixe** (`"…"`) ou une **carte par langue** (`{ "fr": "…", "en": "…" }`) ; `null` garde le libellé traduit des fichiers de langue.
+
+### Exemple : renommer + masquer
+
+```jsonc
+{
+  "references": {
+    "label": { "fr": "Bibliothèque", "en": "Library" },  // nom de l'onglet
+    "hideEmpty": true,                                    // rien d'affiché à 0
+    "groups": {
+      "people":   { "hidden": true },                     // groupe masqué
+      "projects": { "label": { "fr": "Projets de jeu" } } // groupe renommé
+    }
+  }
+}
+```
+
+Chaque `label` de groupe suit la même règle que l'onglet : `null` → libellé traduit (`refAreas`, `refPeople`, …).
+
+## Onglet Références
+
+Six groupes issus de `data/tasks.json`, avec nombre de tâches et avancement :
+
+| groupe | id de config | source | compté par |
+| --- | --- | --- | --- |
+| **Tâches de référence** | `tasks` | tâches au statut `reference` | clic → modale de la tâche |
+| **Contextes** | `contexts` | `settings.taxonomy.contexts` ∪ contextes employés par les tâches | clic → filtre global |
+| **Domaines** | `areas` | `areas[]` | `task.areaId`, ou `project.areaId` de son projet |
+| **Personnes** | `people` | `people[]` | `task.assignedTo` (même nom) |
+| **Projets** | `projects` | `projects[]` | `task.projectId` — chaque projet liste ses sections |
+| **Sections** | `sections` | `sections[]` | `task.sectionId`, regroupées par projet |
+
+Deux règles de visibilité, réglables dans `references` :
+
+- **`groups.<id>.hidden: true`** → le groupe entier disparaît.
+- **`hideEmpty: true`** → un groupe **vide** disparaît, et dans chaque groupe une **entrée à 0 tâche** disparaît aussi (un projet sans tâche, un contexte inutilisé…). Un projet ne gardant plus que des sections vides disparaît lui aussi.
+
+## Filtre par contexte
+
+Le sélecteur **Contexte** de l'en-tête (à côté du thème) filtre **toutes les vues** : tableau, calendrier, roadmap, tâches et références. Le choix est mémorisé dans le navigateur.
+
+Depuis l'onglet Références, cliquer une pastille de contexte active le même filtre (recliquer la désactive).
+
+## Modale de tâche, Markdown, pièces jointes
+
+- **Modale** : chaque tâche est cliquable (cartes du tableau, lignes des tâches, barres de la roadmap, entrées « Tâches de référence ») et s'ouvre dans une fenêtre modale — `Échap`, la croix ou le clic en dehors la ferment.
+- **Markdown** : la `description` est interprétée par un rendu maison (`components/Markdown.tsx`, aucun `dangerouslySetInnerHTML`) — titres, tableaux, listes imbriquées, citations, code, liens, images et front-matter YAML.
+- **Pièces jointes** : les fichiers déclarés dans `tasks.json` sont servis depuis **`public/`** (`cloudKey` → `/attachments/…`, les `uri` externes tels quels). Les images ont un aperçu, les PDF un badge ; un fichier absent de `public/` affiche un badge « manquant » au lieu d'une image cassée. Copiez vos fichiers dans `public/attachments/` — ils apparaissent sans redémarrer.
+
+## Tâches supprimées / archivées
+
+- **`hideDeleted: true`** (défaut) : les tâches portant `deletedAt` n'apparaissent dans **aucune** vue. Passez-le à `false` pour les afficher quand même.
+- **`hideArchived: false`** (défaut) : idem pour `archivedAt` si vous activez cette option.
 
 ## Ajouter une langue — `lib/i18n/*.ts`
 
 **Créez un fichier, c'est tout.** Aucun index à mettre à jour : le serveur relit le dossier à chaque requête et le nouveau fichier apparaît dans le sélecteur de langue à la prochaine actualisation.
+
+> Les deux dossiers sont lus **à chaque requête**, jamais mis en cache : créer un fichier, en supprimer un, ou **modifier le contenu d'un fichier existant** (une couleur, une traduction…) est pris en compte sans redémarrer ni recompiler.
 
 ```ts
 // lib/i18n/de.ts
@@ -112,19 +185,23 @@ app/
   globals.css         # variables de couleur pilotées par le thème
   api/data/route.ts   # relit data/*.json à chaque appel (jamais mis en cache)
 components/
-  Viewer.tsx          # en-tête, onglets, thème, langue, rafraîchissement auto
+  Viewer.tsx          # en-tête, onglets, thème, langue, filtre contexte, rafraîchissement auto, modale de tâche
   BoardView.tsx       # kanban par statut + avancement par colonne
   CalendarView.tsx    # mois complet, tâches par jour, panneau latéral
   RoadmapView.tsx     # timeline horizontale (barres création → mise à jour)
   TasksView.tsx       # liste filtrable (recherche, statut, étiquettes)
-  ui.tsx              # barres d'avancement, pastilles, cartes, détails
+  ReferencesView.tsx  # références, domaines, personnes, projets, sections, contextes
+  TaskModal.tsx       # modale de tâche (Échap / croix / clic extérieur)
+  Markdown.tsx        # rendu Markdown (titres, tableaux, listes, liens…)
+  ui.tsx              # barres d'avancement, pastilles, cartes, détails, pièces jointes
 lib/
   data.ts             # lecture disque de data/*.json + découverte des langues/thèmes
   discover.ts         # scan de lib/i18n/ et lib/themes/ (nouveau fichier = nouvelle entrée)
-  derive.ts           # normalisation des tâches, statuts, dates, agrégats
+  derive.ts           # normalisation des tâches, statuts, dates, filtres, agrégats
+  references.ts       # extraction de areas/people/projects/sections/contextes
   defaults.ts         # config par défaut + fusion avec config.json
-  prefs.ts            # langue / thème / vue mémorisés (localStorage)
-  types.ts            # types partagés (ThemeInput, DataSet, …)
+  prefs.ts            # langue / thème / vue / contexte mémorisés (localStorage)
+  types.ts            # types partagés (ThemeInput, DataSet, ReferenceData, …)
   i18n/
     dictionary.ts     # toutes les clés de texte de l'interface
     locale.ts         # types Locale / ResolvedLocale

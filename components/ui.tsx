@@ -1,10 +1,13 @@
+/* eslint-disable @next/next/no-img-element -- attachment previews come from
+   arbitrary files in public/ and cannot be optimized by next/image. */
 "use client";
 
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 
+import { attachmentHref, formatBytes, isImageHref, isPdfHref, statusToneVar } from "@/lib/derive";
 import { fmt, formatDate, statusLabel, type ResolvedLocale } from "@/lib/i18n";
-import { statusToneVar } from "@/lib/derive";
 import type { Task } from "@/lib/types";
+import Markdown from "./Markdown";
 
 /* ----------------------------- primitives ----------------------------- */
 
@@ -114,17 +117,20 @@ export function TaskCard({
   task,
   locale,
   compact = false,
+  onOpen,
 }: {
   task: Task;
   locale: ResolvedLocale;
   compact?: boolean;
+  /** Opens the task modal. */
+  onOpen?: () => void;
 }) {
   const tr = locale.dict;
   const tone = statusToneVar(task.status);
   const pct = Math.round(task.progress * 100);
 
-  return (
-    <article className="group rounded-xl border border-line bg-surface p-3 transition-colors hover:border-accent/40">
+  const inner = (
+    <>
       <div className="flex items-start justify-between gap-2">
         <h4 className="text-sm font-medium leading-snug text-ink">{task.title}</h4>
         {task.focused ? (
@@ -161,13 +167,136 @@ export function TaskCard({
           <span className="tnum">{formatDate(task.updatedAt, locale)}</span>
         </div>
       ) : null}
-    </article>
+    </>
+  );
+
+  if (!onOpen) {
+    return (
+      <article className="group rounded-xl border border-line bg-surface p-3 transition-colors hover:border-accent/40">
+        {inner}
+      </article>
+    );
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={onOpen}
+      title={tr.open}
+      className="group block w-full cursor-pointer rounded-xl border border-line bg-surface p-3 text-left transition-colors hover:border-accent/40 focus-visible:border-accent focus-visible:outline-none"
+    >
+      {inner}
+    </button>
   );
 }
 
-export function TaskDetail({ task, locale }: { task: Task; locale: ResolvedLocale }) {
+/**
+ * Attachments of a task: images render as a preview, links and files open in
+ * a new tab. A file that is not in `public/` yet is shown but marked missing.
+ */
+export function AttachmentList({
+  task,
+  locale,
+}: {
+  task: Task;
+  locale: ResolvedLocale;
+}) {
   const tr = locale.dict;
-  const isLink = (uri: string) => /^https?:\/\//i.test(uri);
+  // Files that 404 (declared in tasks.json but not copied to public/ yet).
+  const [failed, setFailed] = useState<Set<string>>(() => new Set());
+  const markFailed = (id: string) =>
+    setFailed((prev) => (prev.has(id) ? prev : new Set(prev).add(id)));
+
+  if (!task.attachments.length) return null;
+
+  return (
+    <div>
+      <h5 className="mb-1.5 text-[11px] font-semibold uppercase tracking-wide text-muted">
+        {tr.attachments}
+      </h5>
+      <ul className="grid gap-2 sm:grid-cols-2">
+        {task.attachments.map((a) => {
+          const href = attachmentHref(a);
+          const broken = !href || failed.has(a.id);
+          const image = isImageHref(href);
+          const pdf = isPdfHref(href);
+          const size = formatBytes(a.size, locale.code);
+
+          if (broken) {
+            return (
+              <li key={a.id} className="min-w-0">
+                <span
+                  title={tr.attachmentMissing}
+                  className="flex items-center gap-2 rounded-xl border border-dashed border-line px-3 py-2.5 text-xs text-muted"
+                >
+                  <span className="grid h-7 w-7 shrink-0 place-items-center rounded-lg bg-surface text-[10px] text-muted">
+                    ?
+                  </span>
+                  <span className="min-w-0 flex-1 truncate">{a.title}</span>
+                  <span className="shrink-0 text-[10px] opacity-70">—</span>
+                </span>
+              </li>
+            );
+          }
+
+          return (
+            <li key={a.id} className="min-w-0">
+              {image ? (
+                <a
+                  href={href}
+                  target="_blank"
+                  rel="noreferrer"
+                  title={a.title}
+                  className="block overflow-hidden rounded-xl border border-line bg-surface-2 transition-colors hover:border-accent"
+                >
+                  <img
+                    src={href}
+                    alt={a.title}
+                    loading="lazy"
+                    onError={() => markFailed(a.id)}
+                    className="h-28 w-full object-cover"
+                  />
+                  <span className="flex items-center justify-between gap-2 px-2.5 py-1.5 text-[11px]">
+                    <span className="min-w-0 truncate text-ink">{a.title}</span>
+                    <span className="tnum shrink-0 text-muted">{size ?? ""}</span>
+                  </span>
+                </a>
+              ) : (
+                <a
+                  href={href}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="flex items-center gap-2 rounded-xl border border-line bg-surface-2 px-3 py-2.5 text-xs transition-colors hover:border-accent"
+                >
+                  <span className="grid h-7 w-7 shrink-0 place-items-center rounded-lg bg-surface text-[10px] font-semibold uppercase text-muted">
+                    {pdf ? "pdf" : a.kind === "link" ? "↗" : "file"}
+                  </span>
+                  <span className="min-w-0 flex-1 truncate text-ink">
+                    {a.title}
+                    {a.kind === "link" ? " ↗" : ""}
+                  </span>
+                  {size ? <span className="tnum shrink-0 text-muted">{size}</span> : null}
+                </a>
+              )}
+            </li>
+          );
+        })}
+      </ul>
+    </div>
+  );
+}
+
+export function TaskDetail({
+  task,
+  locale,
+  projectTitle,
+}: {
+  task: Task;
+  locale: ResolvedLocale;
+  /** Human name of `task.projectId` (falls back to the raw id). */
+  projectTitle?: string | null;
+}) {
+  const tr = locale.dict;
 
   return (
     <div className="mt-3 space-y-3 border-t border-line pt-3">
@@ -176,7 +305,7 @@ export function TaskDetail({ task, locale }: { task: Task; locale: ResolvedLocal
           <h5 className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-muted">
             {tr.description}
           </h5>
-          {isLink(task.description) ? (
+          {/^https?:\/\/\S+$/i.test(task.description.trim()) ? (
             <a
               href={task.description}
               target="_blank"
@@ -186,7 +315,7 @@ export function TaskDetail({ task, locale }: { task: Task; locale: ResolvedLocal
               {task.description}
             </a>
           ) : (
-            <p className="whitespace-pre-wrap text-sm text-ink">{task.description}</p>
+            <Markdown text={task.description} className="text-sm" />
           )}
         </div>
       ) : null}
@@ -217,33 +346,7 @@ export function TaskDetail({ task, locale }: { task: Task; locale: ResolvedLocal
         )}
       </div>
 
-      {task.attachments.length ? (
-        <div>
-          <h5 className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-muted">
-            {tr.attachments}
-          </h5>
-          <ul className="space-y-1">
-            {task.attachments.map((a) =>
-              a.uri && isLink(a.uri) ? (
-                <li key={a.id}>
-                  <a
-                    href={a.uri}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="text-sm text-info underline-offset-2 hover:underline"
-                  >
-                    {a.title} ↗
-                  </a>
-                </li>
-              ) : (
-                <li key={a.id} className="text-sm text-muted">
-                  {a.title}
-                </li>
-              ),
-            )}
-          </ul>
-        </div>
-      ) : null}
+      {task.attachments.length ? <AttachmentList task={task} locale={locale} /> : null}
 
       <dl className="grid grid-cols-2 gap-x-4 gap-y-1 text-[11px] text-muted">
         <dt className="font-medium">{tr.created}</dt>
@@ -253,8 +356,8 @@ export function TaskDetail({ task, locale }: { task: Task; locale: ResolvedLocal
         {task.projectId ? (
           <>
             <dt className="font-medium">{tr.project}</dt>
-            <dd className="truncate font-mono" title={task.projectId}>
-              {task.projectId.slice(0, 8)}…
+            <dd className="truncate" title={task.projectId}>
+              {projectTitle ?? `${task.projectId.slice(0, 8)}…`}
             </dd>
           </>
         ) : null}

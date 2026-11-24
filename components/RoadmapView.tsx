@@ -23,11 +23,14 @@ export default function RoadmapView({
   tasks,
   locale,
   nowMs,
+  onOpenTask,
 }: {
   tasks: Task[];
   locale: ResolvedLocale;
   /** Current time in ms, taken from the payload so rendering stays pure. */
   nowMs: number;
+  /** Opens the task modal. */
+  onOpenTask?: (task: Task) => void;
 }) {
   const tr = locale.dict;
 
@@ -166,8 +169,10 @@ export default function RoadmapView({
                               className="group relative"
                               style={{ marginLeft: `${left}%` }}
                             >
-                              <div
-                                className="relative h-7 overflow-hidden rounded-lg border text-left transition-transform group-hover:-translate-y-px"
+                              <button
+                                type="button"
+                                onClick={() => onOpenTask?.(task)}
+                                className="relative block h-7 cursor-pointer overflow-hidden rounded-lg border text-left transition-transform group-hover:-translate-y-px focus-visible:border-accent focus-visible:outline-none"
                                 style={{
                                   width: `${width}%`,
                                   minWidth: 132,
@@ -190,7 +195,7 @@ export default function RoadmapView({
                                     {Math.round(task.progress * 100)}%
                                   </span>
                                 </span>
-                              </div>
+                              </button>
                             </div>
                           );
                         })}

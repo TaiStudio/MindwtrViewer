@@ -13,6 +13,24 @@ const en: Locale = {
     tabCalendar: "Calendar",
     tabRoadmap: "Roadmap",
     tabTasks: "Tasks",
+    tabReferences: "References",
+
+    contextFilter: "Context",
+    allContexts: "All contexts",
+
+    refTasks: "References",
+    refAreas: "Areas",
+    refPeople: "People",
+    refProjects: "Projects",
+    refSections: "Sections",
+    refContexts: "Contexts",
+    refNoMatch: "No references here",
+    refOpenTask: "Open task",
+
+    close: "Close",
+    attachmentMissing: "File missing from the public/ folder",
+    preview: "Preview",
+    openLink: "Open link",
 
     overallProgress: "Overall progress",
     totalTasks: "tasks",
@@ -87,6 +105,7 @@ const en: Locale = {
     status_cancelled: "Cancelled",
     status_archived: "Archived",
     status_maybe: "Maybe",
+    status_reference: "Reference",
   },
 };
 

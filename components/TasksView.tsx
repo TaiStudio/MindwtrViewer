@@ -5,20 +5,22 @@ import { useMemo, useState } from "react";
 import { allTags, presentStatuses } from "@/lib/derive";
 import { fmt, formatDate, statusLabel, type ResolvedLocale } from "@/lib/i18n";
 import type { Task } from "@/lib/types";
-import { EmptyState, ProgressBar, StatusPill, Tag, TaskDetail } from "./ui";
+import { EmptyState, ProgressBar, StatusPill, Tag } from "./ui";
 
 export default function TasksView({
   tasks,
   locale,
+  onOpenTask,
 }: {
   tasks: Task[];
   locale: ResolvedLocale;
+  /** Opens the task modal. */
+  onOpenTask?: (task: Task) => void;
 }) {
   const tr = locale.dict;
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState("all");
   const [tag, setTag] = useState("all");
-  const [expanded, setExpanded] = useState<string | null>(null);
 
   const statuses = useMemo(() => presentStatuses(tasks), [tasks]);
   const tags = useMemo(() => allTags(tasks), [tasks]);
@@ -100,65 +102,57 @@ export default function TasksView({
 
       {filtered.length ? (
         <ul className="card divide-y divide-[var(--c-border)] overflow-hidden rounded-2xl">
-          {filtered.map((task) => {
-            const open = expanded === task.id;
-            return (
-              <li key={task.id}>
-                <button
-                  onClick={() => setExpanded(open ? null : task.id)}
-                  className="flex w-full items-center gap-4 px-4 py-3 text-left transition-colors hover:bg-surface-2/60"
-                  aria-expanded={open}
-                >
-                  <span className="w-4 shrink-0 text-xs text-muted">{open ? "▾" : "▸"}</span>
+          {filtered.map((task) => (
+            <li key={task.id}>
+              <button
+                type="button"
+                onClick={() => onOpenTask?.(task)}
+                title={tr.open}
+                className="flex w-full cursor-pointer items-center gap-4 px-4 py-3 text-left transition-colors hover:bg-surface-2/60 focus-visible:bg-surface-2/60 focus-visible:outline-none"
+              >
+                <span className="w-4 shrink-0 text-xs text-muted">▸</span>
 
-                  <span className="min-w-0 flex-1">
-                    <span className="flex flex-wrap items-center gap-2">
-                      <span className="text-sm font-medium text-ink">{task.title}</span>
-                      {task.focused ? (
-                        <span
-                          className="h-1.5 w-1.5 rounded-full live-dot"
-                          style={{ background: "var(--c-warning)" }}
-                          title={tr.focusedToday}
-                        />
-                      ) : null}
-                      {task.tags.map((tg) => (
-                        <Tag key={tg} label={tg} />
-                      ))}
-                    </span>
-                    <span className="mt-1 block text-[11px] text-muted">
-                      {task.checklist.length
-                        ? fmt(tr.subItems, {
-                            done: task.checklist.filter((c) => c.completed).length,
-                            total: task.checklist.length,
-                          })
-                        : tr.noChecklist}
-                      {" · "}
-                      {tr.updated} {formatDate(task.updatedAt, locale)}
-                    </span>
+                <span className="min-w-0 flex-1">
+                  <span className="flex flex-wrap items-center gap-2">
+                    <span className="text-sm font-medium text-ink">{task.title}</span>
+                    {task.focused ? (
+                      <span
+                        className="h-1.5 w-1.5 rounded-full live-dot"
+                        style={{ background: "var(--c-warning)" }}
+                        title={tr.focusedToday}
+                      />
+                    ) : null}
+                    {task.tags.map((tg) => (
+                      <Tag key={tg} label={tg} />
+                    ))}
                   </span>
+                  <span className="mt-1 block text-[11px] text-muted">
+                    {task.checklist.length
+                      ? fmt(tr.subItems, {
+                          done: task.checklist.filter((c) => c.completed).length,
+                          total: task.checklist.length,
+                        })
+                      : tr.noChecklist}
+                    {" · "}
+                    {tr.updated} {formatDate(task.updatedAt, locale)}
+                  </span>
+                </span>
 
-                  <span className="hidden w-32 shrink-0 sm:block">
-                    <ProgressBar
-                      value={task.progress}
-                      tone={task.progress >= 1 ? "var(--c-success)" : "var(--c-accent)"}
-                    />
-                  </span>
-                  <span className="tnum w-10 shrink-0 text-right text-xs text-muted">
-                    {Math.round(task.progress * 100)}%
-                  </span>
-                  <span className="hidden shrink-0 md:block">
-                    <StatusPill status={task.status} locale={locale} />
-                  </span>
-                </button>
-
-                {open ? (
-                  <div className="rise border-t border-line bg-surface-2/40 px-4 pb-4 pl-12">
-                    <TaskDetail task={task} locale={locale} />
-                  </div>
-                ) : null}
-              </li>
-            );
-          })}
+                <span className="hidden w-32 shrink-0 sm:block">
+                  <ProgressBar
+                    value={task.progress}
+                    tone={task.progress >= 1 ? "var(--c-success)" : "var(--c-accent)"}
+                  />
+                </span>
+                <span className="tnum w-10 shrink-0 text-right text-xs text-muted">
+                  {Math.round(task.progress * 100)}%
+                </span>
+                <span className="hidden shrink-0 md:block">
+                  <StatusPill status={task.status} locale={locale} />
+                </span>
+              </button>
+            </li>
+          ))}
         </ul>
       ) : (
         <EmptyState title={tr.noResults} hint={tr.clearFilters} />

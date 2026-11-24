@@ -50,25 +50,46 @@ function isPlainObject(v: unknown): v is Record<string, unknown> {
   return typeof v === "object" && v !== null && !Array.isArray(v);
 }
 
-/** `.ts` file names in a folder, sorted for a stable order. */
-async function listFiles(dir: string): Promise<{ file: string; name: string }[]> {
+/** `.ts` file names in a folder, sorted for a stable order, with their mtime. */
+async function listFiles(
+  dir: string,
+): Promise<{ file: string; name: string; version: string }[]> {
   try {
     const entries = await fs.readdir(dir, { withFileTypes: true });
-    return entries
+    const candidates = entries
       .filter((e) => e.isFile() && (e.name.endsWith(".ts") || e.name.endsWith(".mts")))
       .filter((e) => !e.name.endsWith(".d.ts"))
       .map((e) => ({ file: path.join(dir, e.name), name: e.name.replace(/\.m?ts$/, "") }))
       .filter((e) => !RESERVED_FILES.includes(e.name))
       .sort((a, b) => a.name.localeCompare(b.name));
+
+    return await Promise.all(
+      candidates.map(async (c) => {
+        let version = "0";
+        try {
+          version = String((await fs.stat(c.file)).mtimeMs);
+        } catch {
+          /* vanished between readdir and stat */
+        }
+        return { ...c, version };
+      }),
+    );
   } catch {
     return [];
   }
 }
 
-async function importDefault(file: string, folder: "locales" | "themes"): Promise<unknown> {
-  // 1) native Node import (no rebuild required for files added at runtime)
+async function importDefault(
+  file: string,
+  folder: "locales" | "themes",
+  version: string,
+): Promise<unknown> {
+  // 1) native Node import (no rebuild required for files added at runtime).
+  //    The `?v=` query busts Node's ESM cache so edits to an existing file
+  //    are picked up too.
   try {
-    const mod = (await import(/* webpackIgnore: true */ pathToFileURL(file).href)) as {
+    const url = `${pathToFileURL(file).href}?v=${version}`;
+    const mod = (await import(/* webpackIgnore: true */ url)) as {
       default?: unknown;
     };
     if (mod.default !== undefined) return mod.default;
@@ -128,10 +149,25 @@ type Cache<T> = { stamp: string; value: T } | null;
 let localeCache: Cache<ResolvedLocale[]> = null;
 let themeCache: Cache<ThemeDef[]> = null;
 
+/**
+ * Fingerprint of a discovery folder: file names + their mtimes. Editing the
+ * content of an existing file changes the stamp, so the cache is invalidated.
+ */
 async function stamp(dir: string): Promise<string> {
   try {
-    const [entries, stat] = await Promise.all([fs.readdir(dir), fs.stat(dir)]);
-    return `${stat.mtimeMs}:${entries.length}`;
+    const entries = await fs.readdir(dir, { withFileTypes: true });
+    const parts: string[] = [];
+    for (const e of entries) {
+      if (!e.isFile()) continue;
+      try {
+        const stat = await fs.stat(path.join(dir, e.name));
+        parts.push(`${e.name}:${stat.mtimeMs}`);
+      } catch {
+        /* ignore */
+      }
+    }
+    parts.sort();
+    return parts.join("|") || "empty";
   } catch {
     return "missing";
   }
@@ -148,7 +184,7 @@ export async function discoverLocales(): Promise<ResolvedLocale[]> {
   const files = await listFiles(LOCALES_DIR);
   const locales: Locale[] = [];
   for (const entry of files) {
-    const raw = await importDefault(entry.file, "locales");
+    const raw = await importDefault(entry.file, "locales", entry.version);
     const locale = raw === null ? null : toLocale(raw, entry.name);
     if (locale) locales.push(locale);
   }
@@ -176,7 +212,7 @@ export async function discoverThemes(): Promise<ThemeDef[]> {
   const files = await listFiles(THEMES_DIR);
   const themes: ThemeDef[] = [];
   for (const entry of files) {
-    const raw = await importDefault(entry.file, "themes");
+    const raw = await importDefault(entry.file, "themes", entry.version);
     const theme = raw === null ? null : toTheme(raw, entry.name);
     if (theme) themes.push(theme);
   }

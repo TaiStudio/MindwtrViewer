@@ -18,6 +18,9 @@ export interface RawAttachment {
   kind?: string;
   title?: string;
   uri?: string;
+  cloudKey?: string;
+  deletedAt?: string | null;
+  size?: number;
 }
 
 /** Raw task exactly as it comes from data/tasks.json (unknown fields are kept). */
@@ -29,6 +32,11 @@ export interface RawTask {
   createdAt?: string;
   updatedAt?: string;
   projectId?: string;
+  sectionId?: string;
+  areaId?: string;
+  assignedTo?: string;
+  deletedAt?: string | null;
+  archivedAt?: string | null;
   tags?: string[];
   contexts?: unknown[];
   checklist?: RawChecklistItem[];
@@ -48,15 +56,88 @@ export interface Task {
   description: string | null;
   status: string;
   projectId: string | null;
+  /** Section inside the project (tasks.json `sectionId`). */
+  sectionId: string | null;
+  /** Area the task belongs to directly (tasks.json `areaId`). */
+  areaId: string | null;
+  /** Person the task is assigned to (tasks.json `assignedTo`, a name). */
+  assignedTo: string | null;
+  /** Context tokens, e.g. `["@craft", "@mob"]`. */
+  contexts: string[];
   tags: string[];
   focused: boolean;
+  /** Soft-deleted (`deletedAt`) / archived (`archivedAt`) — shown or hidden
+   *  according to the `hideDeleted` / `hideArchived` config flags. */
+  deleted: boolean;
+  archived: boolean;
   createdAt: Date | null;
   updatedAt: Date | null;
   order: number;
   checklist: { id: string; title: string; completed: boolean }[];
-  attachments: { id: string; title: string; uri: string; kind: string }[];
+  attachments: Attachment[];
   /** 0..1 — checklist completion when a checklist exists, else status-based. */
   progress: number;
+}
+
+/** A normalized attachment (`kind`: `"file"` | `"link"` | …). */
+export interface Attachment {
+  id: string;
+  title: string;
+  /** Raw `uri` — may be empty for files stored under `public/`. */
+  uri: string;
+  kind: string;
+  /** Path inside `public/`, e.g. `attachments/<id>.png`. */
+  cloudKey: string | null;
+  /** Soft-deleted (`deletedAt`) — never shown. */
+  deleted: boolean;
+  /** Bytes, when known. */
+  size: number | null;
+}
+
+/* ------------------------------ references ----------------------------- */
+
+/** `areas[]` from tasks.json. */
+export interface AreaRef {
+  id: string;
+  name: string;
+  color: string | null;
+  order: number;
+}
+
+/** `people[]` from tasks.json. */
+export interface PersonRef {
+  id: string;
+  name: string;
+  order: number;
+}
+
+/** `projects[]` from tasks.json. */
+export interface ProjectRef {
+  id: string;
+  title: string;
+  areaId: string | null;
+  areaTitle: string | null;
+  color: string | null;
+  status: string | null;
+  order: number;
+}
+
+/** `sections[]` from tasks.json. */
+export interface SectionRef {
+  id: string;
+  title: string;
+  projectId: string | null;
+  order: number;
+}
+
+/** Everything the "References" tab renders. */
+export interface ReferenceData {
+  areas: AreaRef[];
+  people: PersonRef[];
+  projects: ProjectRef[];
+  sections: SectionRef[];
+  /** Context tokens = `settings.taxonomy.contexts` ∪ contexts used by tasks. */
+  contexts: string[];
 }
 
 export interface ThemeColors {
@@ -111,10 +192,45 @@ export interface AppConfig {
   /** Polling interval (ms) used to re-read data/tasks.json & data/config.json */
   refreshIntervalMs: number;
   calendar: { dateField: "createdAt" | "updatedAt" };
+  /** Presentation of the "Références" tab — see `ReferencesConfig`. */
+  references: ReferencesConfig;
+  /** Hide tasks carrying `deletedAt` (default: show them, as before). */
+  hideDeleted: boolean;
+  /** Hide tasks carrying `archivedAt`. */
+  hideArchived: boolean;
+}
+
+/** Identifiers of the groups shown in the "Références" tab. */
+export type ReferenceGroupId =
+  | "tasks"
+  | "areas"
+  | "people"
+  | "projects"
+  | "sections"
+  | "contexts";
+
+/** Per-group switch: hide it, and/or override its translated label. */
+export interface ReferenceGroupConfig {
+  /** Force-hide the group, whatever it contains. */
+  hidden: boolean;
+  /** `null` → use the translated label from the language files. */
+  label: string | Record<string, string> | null;
+}
+
+/** `references` block of data/config.json. */
+export interface ReferencesConfig {
+  /** Tab label. `null` → translated `tabReferences`. */
+  label: string | Record<string, string> | null;
+  /**
+   * Hide empty groups, and inside a group hide every entry with no task.
+   * `false` shows everything, even a group with zero entries.
+   */
+  hideEmpty: boolean;
+  groups: Record<ReferenceGroupId, ReferenceGroupConfig>;
 }
 
 /** Main navigation tabs. */
-export type ViewId = "board" | "calendar" | "roadmap" | "tasks";
+export type ViewId = "board" | "calendar" | "roadmap" | "tasks" | "references";
 
 /** What the client receives from the API. */
 export interface DataSet {
@@ -126,6 +242,8 @@ export interface DataSet {
   locales: ResolvedLocale[];
   /** Themes discovered in `lib/themes/`. */
   themes: ThemeDef[];
+  /** Areas / people / projects / sections / contexts from tasks.json. */
+  references: ReferenceData;
   /** ISO timestamps of the source files, for the "last updated" hint. */
   sources: { tasks: string | null; config: string | null };
   /** ISO time of this response. */

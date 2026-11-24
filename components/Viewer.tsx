@@ -2,21 +2,35 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 
-import { overallProgress, reviveDates } from "@/lib/derive";
+import { filterByContext, overallProgress, reviveDates } from "@/lib/derive";
+import { DEFAULT_CONFIG } from "@/lib/defaults";
 import { formatClock, formatDateTime, localized, type ResolvedLocale } from "@/lib/i18n";
 import { updatePrefs, usePrefs } from "@/lib/prefs";
-import type { AppConfig, DataSet, Task, ViewId } from "@/lib/types";
+import type { AppConfig, DataSet, ReferenceData, Task, ViewId } from "@/lib/types";
 import BoardView from "./BoardView";
 import CalendarView from "./CalendarView";
+import ReferencesView from "./ReferencesView";
 import RoadmapView from "./RoadmapView";
+import TaskModal from "./TaskModal";
 import TasksView from "./TasksView";
 import { ProgressBar, Ring } from "./ui";
 
-const VIEWS: { id: ViewId; key: "tabBoard" | "tabCalendar" | "tabRoadmap" | "tabTasks" }[] = [
+type TabKey = "tabBoard" | "tabCalendar" | "tabRoadmap" | "tabTasks" | "tabReferences";
+
+const EMPTY_REFERENCES: ReferenceData = {
+  areas: [],
+  people: [],
+  projects: [],
+  sections: [],
+  contexts: [],
+};
+
+const VIEWS: { id: ViewId; key: TabKey }[] = [
   { id: "board", key: "tabBoard" },
   { id: "calendar", key: "tabCalendar" },
   { id: "roadmap", key: "tabRoadmap" },
   { id: "tasks", key: "tabTasks" },
+  { id: "references", key: "tabReferences" },
 ];
 
 /** camelCase colour key → kebab-case CSS variable name (textMuted → text-muted). */
@@ -33,6 +47,8 @@ export default function Viewer({ initialData }: { initialData: DataSet }) {
     initialData.ok ? null : (initialData.error ?? "error"),
   );
   const [busy, setBusy] = useState(false);
+  /** Task opened in the modal (`null` = closed). */
+  const [openTaskId, setOpenTaskId] = useState<string | null>(null);
   const prefs = usePrefs();
 
   const load = useCallback(async () => {
@@ -93,13 +109,35 @@ export default function Viewer({ initialData }: { initialData: DataSet }) {
     root.lang = locale.code;
   }, [theme, locale]);
 
-  const tasks: Task[] = data?.tasks ?? [];
+  const allTasks: Task[] = useMemo(() => data?.tasks ?? [], [data]);
+  const references = data?.references ?? EMPTY_REFERENCES;
+  const contextList = references.contexts;
+
+  const openTask = useCallback((task: Task) => setOpenTaskId(task.id), []);
+  // Looked up in `allTasks` so the modal survives a filter change.
+  const selectedTask = allTasks.find((t) => t.id === openTaskId) ?? null;
+
+  // Global context filter (stored in localStorage) — applies to every view.
+  const activeContext =
+    prefs.ctx && contextList.includes(prefs.ctx) ? prefs.ctx : null;
+  const tasks = useMemo(
+    () => filterByContext(allTasks, activeContext),
+    [allTasks, activeContext],
+  );
+
   const tr = locale.dict;
   const progress = overallProgress(tasks);
   const doneCount = tasks.filter((task) => task.progress >= 1).length;
   const focusedCount = tasks.filter((task) => task.focused).length;
   const siteName = localized(config?.siteName, locale.code, "Mindwtr Viewer");
   const themeName = localized(theme?.name, locale.code, theme?.id ?? "");
+  // Tab + group labels can be overridden in data/config.json (`references` block).
+  const refCfg = config?.references ?? DEFAULT_CONFIG.references;
+  const referencesLabel = localized(
+    refCfg.label ?? undefined,
+    locale.code,
+    tr.tabReferences,
+  );
 
   const lastUpdate = data?.sources.tasks ?? data?.generatedAt ?? null;
   const lastUpdateDate = lastUpdate ? new Date(lastUpdate) : null;
@@ -148,6 +186,26 @@ export default function Viewer({ initialData }: { initialData: DataSet }) {
                 <option value={theme.id}>{themeName}</option>
               ) : null}
             </select>
+
+            {contextList.length ? (
+              <select
+                value={activeContext ?? ""}
+                onChange={(e) => updatePrefs({ ctx: e.target.value || undefined })}
+                title={tr.contextFilter}
+                className={`rounded-lg border px-2.5 py-1.5 text-xs outline-none focus:border-accent ${
+                  activeContext
+                    ? "border-accent bg-accent-soft text-ink"
+                    : "border-line bg-surface text-ink"
+                }`}
+              >
+                <option value="">{tr.allContexts}</option>
+                {contextList.map((ctx) => (
+                  <option key={ctx} value={ctx}>
+                    {ctx}
+                  </option>
+                ))}
+              </select>
+            ) : null}
 
             <button
               onClick={() => {
@@ -213,7 +271,7 @@ export default function Viewer({ initialData }: { initialData: DataSet }) {
                   : "text-muted hover:bg-surface-2 hover:text-ink"
                   }`}
               >
-                {tr[v.key]}
+                {v.key === "tabReferences" ? referencesLabel : tr[v.key]}
               </button>
             ))}
           </nav>
@@ -234,18 +292,38 @@ export default function Viewer({ initialData }: { initialData: DataSet }) {
           <div className="grid place-items-center py-24 text-sm text-muted">{tr.loading}</div>
         ) : null}
 
-        {view === "board" ? <BoardView tasks={tasks} locale={locale} /> : null}
+        {view === "board" ? (
+          <BoardView tasks={tasks} locale={locale} onOpenTask={openTask} />
+        ) : null}
         {view === "calendar" ? (
           <CalendarView
             tasks={tasks}
             locale={locale}
             defaultField={config?.calendar.dateField ?? "updatedAt"}
+            onOpenTask={openTask}
           />
         ) : null}
         {view === "roadmap" ? (
-          <RoadmapView tasks={tasks} locale={locale} nowMs={Number.isNaN(nowMs) ? 0 : nowMs} />
+          <RoadmapView
+            tasks={tasks}
+            locale={locale}
+            nowMs={Number.isNaN(nowMs) ? 0 : nowMs}
+            onOpenTask={openTask}
+          />
         ) : null}
-        {view === "tasks" ? <TasksView tasks={tasks} locale={locale} /> : null}
+        {view === "tasks" ? <TasksView tasks={tasks} locale={locale} onOpenTask={openTask} /> : null}
+        {view === "references" ? (
+          <ReferencesView
+            tasks={tasks}
+            allTasks={allTasks}
+            references={references}
+            config={refCfg}
+            locale={locale}
+            activeContext={activeContext}
+            onSelectContext={(ctx) => updatePrefs({ ctx: ctx ?? undefined })}
+            onOpenTask={openTask}
+          />
+        ) : null}
       </main>
 
       <footer className="mt-8 flex flex-wrap items-center justify-between gap-2 border-t border-line pt-4 text-[11px] text-muted">
@@ -256,6 +334,19 @@ export default function Viewer({ initialData }: { initialData: DataSet }) {
           {themeName}
         </span>
       </footer>
+
+      {selectedTask ? (
+        <TaskModal
+          task={selectedTask}
+          locale={locale}
+          projectTitle={
+            selectedTask.projectId
+              ? (references.projects.find((p) => p.id === selectedTask.projectId)?.title ?? null)
+              : null
+          }
+          onClose={() => setOpenTaskId(null)}
+        />
+      ) : null}
     </div>
   );
 }

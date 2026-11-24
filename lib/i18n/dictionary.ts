@@ -13,6 +13,27 @@ export interface Dictionary {
   tabCalendar: string;
   tabRoadmap: string;
   tabTasks: string;
+  tabReferences: string;
+
+  /* context filter (header) */
+  contextFilter: string;
+  allContexts: string;
+
+  /* references tab */
+  refTasks: string;
+  refAreas: string;
+  refPeople: string;
+  refProjects: string;
+  refSections: string;
+  refContexts: string;
+  refNoMatch: string;
+  refOpenTask: string;
+
+  /* task modal */
+  close: string;
+  attachmentMissing: string;
+  preview: string;
+  openLink: string;
 
   /* stats */
   overallProgress: string;
@@ -93,4 +114,5 @@ export interface Dictionary {
   status_cancelled: string;
   status_archived: string;
   status_maybe: string;
+  status_reference: string;
 }

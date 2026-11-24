@@ -9,7 +9,6 @@ import { loadDataSet } from "@/lib/data";
  * Afterwards the client polls /api/data on its own.
  */
 export const instant = false;
-
 export default async function Home() {
   await connection();
   const initialData = await loadDataSet();

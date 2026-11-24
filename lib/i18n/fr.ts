@@ -12,6 +12,24 @@ const fr: Locale = {
     tabCalendar: "Calendrier",
     tabRoadmap: "Roadmap",
     tabTasks: "Tâches",
+    tabReferences: "Références",
+
+    contextFilter: "Contexte",
+    allContexts: "Tous les contextes",
+
+    refTasks: "Références",
+    refAreas: "Domaines",
+    refPeople: "Personnes",
+    refProjects: "Projets",
+    refSections: "Sections",
+    refContexts: "Contextes",
+    refNoMatch: "Aucune référence ici",
+    refOpenTask: "Ouvrir la tâche",
+
+    close: "Fermer",
+    attachmentMissing: "Fichier absent du dossier public/",
+    preview: "Aperçu",
+    openLink: "Ouvrir le lien",
 
     overallProgress: "Avancement global",
     totalTasks: "tâches",
@@ -77,7 +95,7 @@ const fr: Locale = {
 
     status_today: "Aujourd'hui",
     status_in_progress: "En cours",
-    status_next: "Ensuite",
+    status_next: "Prochaine Action",
     status_waiting: "En attente",
     status_inbox: "Boîte de réception",
     status_backlog: "Backlog",
@@ -86,6 +104,7 @@ const fr: Locale = {
     status_cancelled: "Annulé",
     status_archived: "Archivé",
     status_maybe: "Peut-être",
+    status_reference: "Référence",
   },
 };
 

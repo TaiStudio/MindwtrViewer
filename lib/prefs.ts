@@ -4,7 +4,7 @@ import { useSyncExternalStore } from "react";
 
 import type { Lang, ViewId } from "./types";
 
-export type Prefs = { lang?: Lang; theme?: string; view?: ViewId };
+export type Prefs = { lang?: Lang; theme?: string; view?: ViewId; ctx?: string };
 
 const STORAGE_KEY = "mindwtr-viewer-prefs";
 const EMPTY: Prefs = {};

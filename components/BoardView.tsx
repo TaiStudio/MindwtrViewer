@@ -8,9 +8,12 @@ import { EmptyState, ProgressBar, TaskCard } from "./ui";
 export default function BoardView({
   tasks,
   locale,
+  onOpenTask,
 }: {
   tasks: Task[];
   locale: ResolvedLocale;
+  /** Opens the task modal. */
+  onOpenTask?: (task: Task) => void;
 }) {
   const tr = locale.dict;
   const statuses = presentStatuses(tasks);
@@ -51,7 +54,14 @@ export default function BoardView({
 
             <div className="flex flex-1 flex-col gap-2.5">
               {items.length ? (
-                items.map((task) => <TaskCard key={task.id} task={task} locale={locale} />)
+                items.map((task) => (
+                  <TaskCard
+                    key={task.id}
+                    task={task}
+                    locale={locale}
+                    onOpen={onOpenTask ? () => onOpenTask(task) : undefined}
+                  />
+                ))
               ) : (
                 <p className="rounded-xl border border-dashed border-line px-3 py-6 text-center text-xs text-muted">
                   {tr.boardEmpty}
