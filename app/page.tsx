@@ -1,11 +1,11 @@
 import { connection } from "next/server";
 
-import Viewer from "@/components/Viewer";
-import { loadDataSet } from "@/lib/data";
+import Viewer from "@components/Viewer";
+import { loadDataSet } from "@lib/data";
 
 /**
  * Blocking (non-prerendered) render: the page reads data/tasks.json and
- * data/config.json on every request so the first paint is already up to date.
+ * data/config.ts on every request so the first paint is already up to date.
  * Afterwards the client polls /api/data on its own.
  */
 export const instant = false;

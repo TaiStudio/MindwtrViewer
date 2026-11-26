@@ -1,4 +1,4 @@
-import type { Locale } from "@/lib/i18n/locale";
+import type { Locale } from "@lib/i18n/locale";
 
 const fr: Locale = {
   code: "fr",
@@ -43,7 +43,7 @@ const fr: Locale = {
     theme: "Thème",
     loading: "Chargement…",
     errorTitle: "Impossible de charger les données",
-    errorHint: "Vérifiez que data/tasks.json et data/config.json sont du JSON valide.",
+    errorHint: "Vérifiez que data/tasks.json est du JSON valide et que data/config.ts est correct.",
 
     search: "Rechercher une tâche…",
     status: "Statut",

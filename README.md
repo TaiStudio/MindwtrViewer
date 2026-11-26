@@ -15,7 +15,7 @@ Puis ouvrez <http://localhost:3000>.
 
 ## Données dynamiques
 
-Le site relit **`data/tasks.json`** et **`data/config.json`** à chaque requête de page (`/` et `/api/data`, rendus bloquants donc jamais mis en cache), puis le navigateur rafraîchit automatiquement (par défaut toutes les 4 secondes, et au retour sur l'onglet).
+Le site relit **`data/tasks.json`** et **`data/config.ts`** à chaque requête de page (`/` et `/api/data`, rendus bloquants donc jamais mis en cache), puis le navigateur rafraîchit automatiquement (par défaut toutes les 4 secondes, et au retour sur l'onglet).
 
 👉 Vous pouvez modifier `data/tasks.json` à n'importe quel moment : les changements s'affichent seuls, sans redémarrer le serveur.
 
@@ -26,52 +26,65 @@ Chaque tâche est affichée avec :
 - son **avancement** : `checklist` complétée / total, sinon 100 % si le statut est « terminé »,
 - ses dates de création / mise à jour, tags, description, pièces jointes.
 
-## Configuration — `data/config.json`
+## Configuration — `data/config.ts`
 
-```jsonc
-{
-  "siteName": "Mindwtr Viewer",          // string ou { "fr": ..., "en": ... }
-  "language": "fr",                       // code d'une langue de lib/i18n/ — langue par défaut
-  "theme": "moderne",                     // id d'un thème de lib/themes/ — thème par défaut
-  "refreshIntervalMs": 4000,              // fréquence de rechargement (500–60000)
-  "calendar": { "dateField": "updatedAt" }, // "createdAt" | "updatedAt"
+Fichier **TypeScript typé** : votre éditeur connaît chaque clé (`Ctrl+Espace` pour l'autocomplétion, `Ctrl+Clic` sur un mot pour ouvrir le type `AppConfig` dans `lib/types.ts`). Une clé inconnue ou une mauvaise valeur est soulignée **dans l'éditeur** avant même de sauvegarder.
 
-  "references": {                         // onglet Références (voir ci-dessous)
-    "label": null,                        //   nom de l'onglet
-    "hideEmpty": true,                    //   masquer groupes vides + entrées à 0 tâche
-    "groups": {                           //   un bloc par groupe :
-      "tasks":    { "hidden": false, "label": null },   // Tâches de référence
-      "areas":    { "hidden": false, "label": null },   // Domaines
-      "people":   { "hidden": false, "label": null },   // Personnes
-      "projects": { "hidden": false, "label": null },   // Projets
-      "sections": { "hidden": false, "label": null },   // Sections
-      "contexts": { "hidden": false, "label": null }    // Contextes
-    }
+```ts
+// data/config.ts
+import type { UserConfig } from "@lib/types";
+
+const config: UserConfig = {
+  siteName: "Mindwtr Viewer",            // string ou { fr: …, en: … }
+  language: "fr",                        // code d'une langue de lib/i18n/ — langue par défaut
+  theme: "moderne",                      // id d'un thème de lib/themes/ — thème par défaut
+  refreshIntervalMs: 4000,               // fréquence de rechargement (500–60000)
+  calendar: { dateField: "updatedAt" },  // "createdAt" | "updatedAt"
+
+  references: {                          // onglet Références (voir ci-dessous)
+    label: null,                         //   nom de l'onglet
+    hideEmpty: true,                     //   masquer groupes vides + entrées à 0 tâche
+    groups: {                            //   un bloc par groupe :
+      tasks:    { hidden: false, label: null },   // Tâches de référence
+      areas:    { hidden: false, label: null },   // Domaines
+      people:   { hidden: false, label: null },   // Personnes
+      projects: { hidden: false, label: null },   // Projets
+      sections: { hidden: false, label: null },   // Sections
+      contexts: { hidden: false, label: null },   // Contextes
+    },
   },
 
-  "hideDeleted": true,                    // masquer les tâches avec deletedAt (défaut)
-  "hideArchived": false                   // masquer les tâches avec archivedAt
-}
+  hideDeleted: true,                     // masquer les tâches avec deletedAt (défaut)
+  hideArchived: false,                   // masquer les tâches avec archivedAt
+};
+
+export default config;
 ```
 
-- Un fichier `config.json` **vide ou partiel** fonctionne : les valeurs manquantes prennent les défauts internes (`lib/defaults.ts`).
+- Un fichier **vide ou partiel** fonctionne : les valeurs manquantes prennent les défauts internes (`lib/defaults.ts`) — `const config: UserConfig = {}; export default config;` suffit.
+- La sauvegarde suffit : le fichier est relu **à chaque requête** (import natif avec `?v=mtime`, pas de cache), sans redémarrer ni recompiler.
 - **Les langues et les thèmes ne se déclarent plus ici** : ils sont découverts dans les dossiers dédiés (voir ci-dessous). Ce fichier ne fait que choisir les défauts.
-- La langue et le thème choisis dans l'interface sont mémorisés dans le navigateur (`localStorage`) et priment sur `config.json`.
-- `label` accepte une **chaîne fixe** (`"…"`) ou une **carte par langue** (`{ "fr": "…", "en": "…" }`) ; `null` garde le libellé traduit des fichiers de langue.
+- La langue et le thème choisis dans l'interface sont mémorisés dans le navigateur (`localStorage`) et priment sur `config.ts`.
+- `label` accepte une **chaîne fixe** (`"…"`) ou une **carte par langue** (`{ fr: "…", en: "…" }`) ; `null` garde le libellé traduit des fichiers de langue.
 
 ### Exemple : renommer + masquer
 
-```jsonc
-{
-  "references": {
-    "label": { "fr": "Bibliothèque", "en": "Library" },  // nom de l'onglet
-    "hideEmpty": true,                                    // rien d'affiché à 0
-    "groups": {
-      "people":   { "hidden": true },                     // groupe masqué
-      "projects": { "label": { "fr": "Projets de jeu" } } // groupe renommé
+```ts
+// data/config.ts (extrait)
+import type { UserConfig } from "@lib/types";
+
+const config: UserConfig = {
+  references: {
+    label: { fr: "Bibliothèque", en: "Library" },   // nom de l'onglet
+    hideEmpty: true,                                // rien d'affiché à 0
+    groups: {
+      people:   { hidden: true },                   // groupe masqué
+      projects: { label: { fr: "Projets de jeu" } } // groupe renommé
     }
   }
-}
+};
+
+export default config;
 ```
 
 Chaque `label` de groupe suit la même règle que l'onglet : `null` → libellé traduit (`refAreas`, `refPeople`, …).
@@ -119,7 +132,7 @@ Depuis l'onglet Références, cliquer une pastille de contexte active le même f
 
 ```ts
 // lib/i18n/de.ts
-import type { Locale } from "@/lib/i18n/locale";
+import type { Locale } from "@lib/i18n/locale";
 
 const de: Locale = {
   code: "de",            // doit correspondre au nom du fichier
@@ -146,7 +159,7 @@ Même principe : **créez le fichier, c'est tout.**
 
 ```ts
 // lib/themes/neon.ts
-import type { ThemeInput } from "@/lib/types";
+import type { ThemeInput } from "@lib/types";
 
 const neon: ThemeInput = {
   name: { fr: "Néon", en: "Neon" },   // chaîne simple possible aussi
@@ -180,10 +193,10 @@ export default neon;
 
 ```
 app/
-  page.tsx            # rendu bloquant : lit data/*.json à chaque requête → <Viewer />
+  page.tsx            # rendu bloquant : lit data/tasks.json + data/config.ts → <Viewer />
   layout.tsx          # polices Geist + métadonnées
   globals.css         # variables de couleur pilotées par le thème
-  api/data/route.ts   # relit data/*.json à chaque appel (jamais mis en cache)
+  api/data/route.ts   # relit data/tasks.json + data/config.ts (jamais mis en cache)
 components/
   Viewer.tsx          # en-tête, onglets, thème, langue, filtre contexte, rafraîchissement auto, modale de tâche
   BoardView.tsx       # kanban par statut + avancement par colonne
@@ -194,12 +207,15 @@ components/
   TaskModal.tsx       # modale de tâche (Échap / croix / clic extérieur)
   Markdown.tsx        # rendu Markdown (titres, tableaux, listes, liens…)
   ui.tsx              # barres d'avancement, pastilles, cartes, détails, pièces jointes
+data/
+  config.ts           # configuration typée (UserConfig) — éditable à chaud
+  tasks.json          # les données (format tolérant)
 lib/
-  data.ts             # lecture disque de data/*.json + découverte des langues/thèmes
+  data.ts             # lecture disque de data/ + découverte des langues/thèmes
   discover.ts         # scan de lib/i18n/ et lib/themes/ (nouveau fichier = nouvelle entrée)
   derive.ts           # normalisation des tâches, statuts, dates, filtres, agrégats
   references.ts       # extraction de areas/people/projects/sections/contextes
-  defaults.ts         # config par défaut + fusion avec config.json
+  defaults.ts         # config par défaut + fusion avec data/config.ts
   prefs.ts            # langue / thème / vue / contexte mémorisés (localStorage)
   types.ts            # types partagés (ThemeInput, DataSet, ReferenceData, …)
   i18n/

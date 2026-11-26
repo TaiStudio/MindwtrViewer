@@ -2,10 +2,10 @@ import { promises as fs } from "node:fs";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 
-import { resolveDict } from "@/lib/i18n";
-import type { Dictionary } from "@/lib/i18n/dictionary";
-import type { Locale, ResolvedLocale } from "@/lib/i18n/locale";
-import type { ThemeColors, ThemeDef, ThemeInput } from "@/lib/types";
+import { resolveDict } from "@lib/i18n";
+import type { Dictionary } from "@lib/i18n/dictionary";
+import type { Locale, ResolvedLocale } from "@lib/i18n/locale";
+import type { ThemeColors, ThemeDef, ThemeInput } from "@lib/types";
 
 /** Safety net: bundled English, used when a locale file is missing/empty. */
 import enFallback from "./i18n/en";

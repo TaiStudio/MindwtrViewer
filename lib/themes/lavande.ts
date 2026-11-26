@@ -1,4 +1,4 @@
-import type { ThemeInput } from "@/lib/types";
+import type { ThemeInput } from "@lib/types";
 
 /** Soft light theme with a violet-lavender accent. */
 const lavande: ThemeInput = {

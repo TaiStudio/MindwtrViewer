@@ -1,4 +1,4 @@
-import type { Locale } from "@/lib/i18n/locale";
+import type { Locale } from "@lib/i18n/locale";
 
 /** Fallback locale: any missing key in another locale ends up here. */
 const en: Locale = {
@@ -44,7 +44,7 @@ const en: Locale = {
     theme: "Theme",
     loading: "Loading…",
     errorTitle: "Could not load the data",
-    errorHint: "Check that data/tasks.json and data/config.json are valid JSON.",
+    errorHint: "Check that data/tasks.json is valid JSON and data/config.ts is correct.",
 
     search: "Search tasks…",
     status: "Status",

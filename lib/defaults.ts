@@ -2,7 +2,7 @@ import type { AppConfig, ReferenceGroupId } from "./types";
 
 /**
  * Fallback configuration. Everything here can be overridden by editing
- * data/config.json — the file is re-read on every refresh.
+ * data/config.ts — the file is re-read on every refresh.
  *
  * Note: languages (`lib/i18n/*.ts`) and themes (`lib/themes/*.ts`) are
  * discovered from files, not from this config; it only selects the defaults.
@@ -66,7 +66,7 @@ function groupConfig(raw: unknown): AppConfig["references"]["groups"] {
 }
 
 /**
- * Merge whatever is in data/config.json over the defaults, so an empty or
+ * Merge whatever is in data/config.ts over the defaults, so an empty or
  * partial config file never breaks the site.
  */
 export function mergeConfig(raw: unknown): AppConfig {

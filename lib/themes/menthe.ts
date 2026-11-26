@@ -1,4 +1,4 @@
-import type { ThemeInput } from "@/lib/types";
+import type { ThemeInput } from "@lib/types";
 
 /** Fresh light theme with a mint-green accent. */
 const menthe: ThemeInput = {

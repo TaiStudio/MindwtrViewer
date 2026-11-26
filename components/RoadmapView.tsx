@@ -7,9 +7,9 @@ import {
   statusToneVar,
   tasksInStatus,
   groupProgress,
-} from "@/lib/derive";
-import { formatDate, statusLabel, type ResolvedLocale } from "@/lib/i18n";
-import type { Task } from "@/lib/types";
+} from "@lib/derive";
+import { formatDate, statusLabel, type ResolvedLocale } from "@lib/i18n";
+import type { Task } from "@lib/types";
 import { EmptyState, ProgressBar } from "./ui";
 
 const DAY = 86_400_000;
@@ -79,8 +79,9 @@ export default function RoadmapView({
     d ? Math.max(0, Math.min(100, ((d.getTime() - start) / span) * 100)) : 0;
 
   return (
-    <div className="space-y-4">
-      <header className="card flex flex-wrap items-center justify-between gap-3 rounded-2xl px-4 py-3">
+    <div className="flex min-h-0 flex-1 flex-col gap-4">
+      {/* header — outside the scroll region */}
+      <header className="card flex shrink-0 flex-wrap items-center justify-between gap-3 rounded-2xl px-4 py-3">
         <p className="max-w-xl text-xs text-muted">{tr.roadmapHint}</p>
         <div className="flex items-center gap-4 text-[11px] text-muted">
           <span className="flex items-center gap-1.5">
@@ -93,11 +94,12 @@ export default function RoadmapView({
         </div>
       </header>
 
-      <div className="card overflow-hidden rounded-2xl">
+      {/* timeline — scrolls vertically inside the card, horizontally within */}
+      <div className="card min-h-0 flex-1 overflow-y-auto rounded-2xl">
         <div className="overflow-x-auto">
-          <div className="min-w-[900px]">
+          <div className="min-w-[720px] sm:min-w-[900px]">
             {/* time axis */}
-            <div className="relative ml-[168px] h-9 border-b border-line bg-surface-2/50">
+            <div className="relative ml-[120px] h-9 border-b border-line bg-surface-2/50 sm:ml-[168px]">
               {ticks.map((tick) => (
                 <span
                   key={tick.ts}
@@ -125,7 +127,7 @@ export default function RoadmapView({
                   style={{ minHeight: LANE_MIN_H }}
                 >
                   {/* lane label */}
-                  <div className="sticky left-0 z-10 w-[168px] shrink-0 border-r border-line bg-surface px-3 py-2.5">
+                  <div className="sticky left-0 z-10 w-[120px] shrink-0 border-r border-line bg-surface px-3 py-2.5 sm:w-[168px]">
                     <div className="flex items-center gap-2">
                       <span
                         className="h-2 w-2 shrink-0 rounded-full"

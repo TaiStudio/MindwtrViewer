@@ -1,5 +1,6 @@
 import { promises as fs } from "node:fs";
 import path from "node:path";
+import { pathToFileURL } from "node:url";
 
 import { discoverLocales, discoverThemes } from "./discover";
 import { applyVisibility, extractTasks, normalizeTasks } from "./derive";
@@ -30,7 +31,43 @@ async function readJsonFile(name: string): Promise<{ value: unknown; mtime: stri
 }
 
 /**
- * Reads data/tasks.json and data/config.json from disk and discovers the
+ * Loads data/config.ts: type-stripped by Node at runtime (mtime in the query
+ * string busts the ESM module cache so external edits show up on refresh).
+ * Falls back to the bundled copy when native TS imports are unavailable, then
+ * to the legacy data/config.json, then to `null` (defaults).
+ */
+async function readUserConfig(): Promise<{ value: unknown; mtime: string | null }> {
+  const file = path.join(DATA_DIR, "config.ts");
+  let mtime: string | null = null;
+  try {
+    mtime = (await fs.stat(file)).mtime.toISOString();
+  } catch {
+    // config.ts absent — try the legacy JSON below.
+  }
+
+  if (mtime) {
+    const url = `${pathToFileURL(file).href}?v=${encodeURIComponent(mtime)}`;
+    try {
+      const mod = (await import(/* webpackIgnore: true */ /* turbopackIgnore: true */ url)) as {
+        default?: unknown;
+      };
+      return { value: mod.default ?? null, mtime };
+    } catch {
+      // Native TS import unsupported here (e.g. older Node) — use the bundle.
+      try {
+        const mod = await import("../data/config");
+        return { value: mod.default ?? null, mtime };
+      } catch {
+        // Bundle unavailable too — fall through to legacy JSON / defaults.
+      }
+    }
+  }
+
+  return readJsonFile("config.json");
+}
+
+/**
+ * Reads data/tasks.json and data/config.ts from disk and discovers the
  * languages/themes — never cached, so any external edit is picked up on the
  * next refresh.
  */
@@ -42,7 +79,7 @@ export async function loadDataSet(): Promise<DataSet> {
   let config: AppConfig;
   let configMtime: string | null = null;
   try {
-    const cfg = await readJsonFile("config.json");
+    const cfg = await readUserConfig();
     configMtime = cfg.mtime;
     config = mergeConfig(cfg.value);
   } catch {
@@ -69,7 +106,7 @@ export async function loadDataSet(): Promise<DataSet> {
   const usedContexts = allTasks.flatMap((t) => t.contexts);
   references = { ...references, contexts: mergeContexts(references.contexts, usedContexts) };
 
-  // `hideDeleted` / `hideArchived` (config.json) decide what stays visible.
+  // `hideDeleted` / `hideArchived` (config.ts) decide what stays visible.
   const tasks = applyVisibility(allTasks, config);
 
   return {

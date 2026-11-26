@@ -1,4 +1,4 @@
-import type { ThemeInput } from "@/lib/types";
+import type { ThemeInput } from "@lib/types";
 
 /** Clean, high-contrast monochrome dark theme. */
 const monokaiDark: ThemeInput = {

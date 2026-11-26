@@ -1,4 +1,4 @@
-import type { ThemeInput } from "@/lib/types";
+import type { ThemeInput } from "@lib/types";
 
 /** Warm retro dark theme inspired by 1980s terminal amber monitors. */
 const ambre: ThemeInput = {

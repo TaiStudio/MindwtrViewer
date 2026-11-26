@@ -1,4 +1,4 @@
-import type { ThemeInput } from "@/lib/types";
+import type { ThemeInput } from "@lib/types";
 
 /** Soft sepia and parchment theme reminiscent of old vintage books. */
 const parchemin: ThemeInput = {

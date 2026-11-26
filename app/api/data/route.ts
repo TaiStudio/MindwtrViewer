@@ -1,11 +1,11 @@
 import { connection } from "next/server";
 
-import { loadDataSet } from "@/lib/data";
-import { DEFAULT_CONFIG } from "@/lib/defaults";
+import { loadDataSet } from "@lib/data";
+import { DEFAULT_CONFIG } from "@lib/defaults";
 
 /**
- * Reads data/tasks.json + data/config.json on every request.
- * `connection()` opts this route out of the build-time cache, so the JSON
+ * Reads data/tasks.json + data/config.ts on every request.
+ * `connection()` opts this route out of the build-time cache, so the data
  * files can be edited at any time and the browser picks the changes up on its
  * next poll.
  */

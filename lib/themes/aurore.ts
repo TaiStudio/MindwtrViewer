@@ -1,4 +1,4 @@
-import type { ThemeInput } from "@/lib/types";
+import type { ThemeInput } from "@lib/types";
 
 /** Soft light theme with a terracotta accent. */
 const aurore: ThemeInput = {

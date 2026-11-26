@@ -2,11 +2,11 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 
-import { filterByContext, overallProgress, reviveDates } from "@/lib/derive";
-import { DEFAULT_CONFIG } from "@/lib/defaults";
-import { formatClock, formatDateTime, localized, type ResolvedLocale } from "@/lib/i18n";
-import { updatePrefs, usePrefs } from "@/lib/prefs";
-import type { AppConfig, DataSet, ReferenceData, Task, ViewId } from "@/lib/types";
+import { filterByContext, overallProgress, reviveDates } from "@lib/derive";
+import { DEFAULT_CONFIG } from "@lib/defaults";
+import { formatClock, formatDateTime, localized, type ResolvedLocale } from "@lib/i18n";
+import { updatePrefs, usePrefs } from "@lib/prefs";
+import type { AppConfig, DataSet, ReferenceData, Task, ViewId } from "@lib/types";
 import BoardView from "./BoardView";
 import CalendarView from "./CalendarView";
 import ReferencesView from "./ReferencesView";
@@ -131,7 +131,7 @@ export default function Viewer({ initialData }: { initialData: DataSet }) {
   const focusedCount = tasks.filter((task) => task.focused).length;
   const siteName = localized(config?.siteName, locale.code, "Mindwtr Viewer");
   const themeName = localized(theme?.name, locale.code, theme?.id ?? "");
-  // Tab + group labels can be overridden in data/config.json (`references` block).
+  // Tab + group labels can be overridden in data/config.ts (`references` block).
   const refCfg = config?.references ?? DEFAULT_CONFIG.references;
   const referencesLabel = localized(
     refCfg.label ?? undefined,
@@ -145,9 +145,9 @@ export default function Viewer({ initialData }: { initialData: DataSet }) {
   const nowMs = Date.parse(data?.generatedAt ?? "");
 
   return (
-    <div className="mx-auto flex min-h-screen w-full max-w-[1500px] flex-col px-4 py-5 sm:px-6">
+    <div className="mx-auto flex h-dvh w-full max-w-[1500px] flex-col overflow-hidden px-4 py-5 sm:px-6">
       {/* ---------------------------- header ---------------------------- */}
-      <header className="mb-5">
+      <header className="mb-5 max-h-[65vh] shrink-0 overflow-y-auto">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
             <h1 className="text-lg font-semibold tracking-tight text-ink">{siteName}</h1>
@@ -155,21 +155,18 @@ export default function Viewer({ initialData }: { initialData: DataSet }) {
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
-            <div className="flex items-center gap-1 rounded-lg border border-line bg-surface p-1">
+            <select
+              value={locale.code}
+              onChange={(e) => updatePrefs({ lang: e.target.value })}
+              title={tr.language}
+              className="rounded-lg border border-line bg-surface px-2.5 py-1.5 text-xs text-ink outline-none focus:border-accent"
+            >
               {locales.map((l) => (
-                <button
-                  key={l.code}
-                  onClick={() => updatePrefs({ lang: l.code })}
-                  className={`rounded-md px-2.5 py-1 text-[11px] font-semibold uppercase transition-colors ${locale.code === l.code
-                    ? "bg-accent text-accent-contrast"
-                    : "text-muted hover:text-ink"
-                    }`}
-                  title={l.name}
-                >
-                  {l.code}
-                </button>
+                <option key={l.code} value={l.code}>
+                  {l.name}
+                </option>
               ))}
-            </div>
+            </select>
 
             <select
               value={theme?.id ?? themeId}
@@ -261,12 +258,12 @@ export default function Viewer({ initialData }: { initialData: DataSet }) {
           </div>
 
           {/* tabs */}
-          <nav className="flex flex-wrap gap-1 rounded-xl border border-line bg-surface p-1">
+          <nav className="flex gap-1 overflow-x-auto rounded-xl border border-line bg-surface p-1 sm:flex-wrap">
             {VIEWS.map((v) => (
               <button
                 key={v.id}
                 onClick={() => updatePrefs({ view: v.id })}
-                className={`rounded-lg px-3.5 py-2 text-xs font-medium transition-colors ${view === v.id
+                className={`shrink-0 whitespace-nowrap rounded-lg px-3.5 py-2 text-xs font-medium transition-colors ${view === v.id
                   ? "bg-accent text-accent-contrast"
                   : "text-muted hover:bg-surface-2 hover:text-ink"
                   }`}
@@ -279,9 +276,10 @@ export default function Viewer({ initialData }: { initialData: DataSet }) {
       </header>
 
       {/* ----------------------------- body ----------------------------- */}
-      <main className="flex-1">
+      {/* Non-scrolling column: each view owns its header + scroll region. */}
+      <main className="flex min-h-0 flex-1 flex-col overflow-hidden">
         {error ? (
-          <div className="mb-4 rounded-2xl border border-bad/40 bg-surface p-4">
+          <div className="mb-4 shrink-0 rounded-2xl border border-bad/40 bg-surface p-4">
             <p className="text-sm font-medium text-bad">{tr.errorTitle}</p>
             <p className="mt-1 break-words text-xs text-muted">{error}</p>
             <p className="mt-1 text-xs text-muted">{tr.errorHint}</p>
@@ -289,7 +287,7 @@ export default function Viewer({ initialData }: { initialData: DataSet }) {
         ) : null}
 
         {!data && !error ? (
-          <div className="grid place-items-center py-24 text-sm text-muted">{tr.loading}</div>
+          <div className="grid shrink-0 place-items-center py-24 text-sm text-muted">{tr.loading}</div>
         ) : null}
 
         {view === "board" ? (
@@ -326,7 +324,7 @@ export default function Viewer({ initialData }: { initialData: DataSet }) {
         ) : null}
       </main>
 
-      <footer className="mt-8 flex flex-wrap items-center justify-between gap-2 border-t border-line pt-4 text-[11px] text-muted">
+      <footer className="mt-4 flex shrink-0 flex-wrap items-center justify-between gap-2 border-t border-line pt-4 text-[11px] text-muted">
         <span>🦊<a href="https://taistudio.fr">Tai Studio</a> | 2021-{new Date().getFullYear()}</span>
         <span className="tnum">
           {tr.lastUpdate} {lastUpdateDate ? formatDateTime(lastUpdateDate, locale) : "—"}

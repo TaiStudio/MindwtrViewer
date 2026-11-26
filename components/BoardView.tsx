@@ -1,8 +1,8 @@
 "use client";
 
-import { presentStatuses, statusToneVar, tasksInStatus, groupProgress } from "@/lib/derive";
-import { statusLabel, type ResolvedLocale } from "@/lib/i18n";
-import type { Task } from "@/lib/types";
+import { presentStatuses, statusToneVar, tasksInStatus, groupProgress } from "@lib/derive";
+import { statusLabel, type ResolvedLocale } from "@lib/i18n";
+import type { Task } from "@lib/types";
 import { EmptyState, ProgressBar, TaskCard } from "./ui";
 
 export default function BoardView({
@@ -23,7 +23,7 @@ export default function BoardView({
   }
 
   return (
-    <div className="flex gap-4 overflow-x-auto pb-2">
+    <div className="flex min-h-0 flex-1 gap-3 overflow-x-auto pb-2 sm:gap-4">
       {statuses.map((status) => {
         const items = tasksInStatus(tasks, status);
         const avg = groupProgress(items);
@@ -32,9 +32,9 @@ export default function BoardView({
         return (
           <section
             key={status}
-            className="flex w-[300px] shrink-0 flex-col rounded-2xl border border-line bg-surface-2/60 p-3"
+            className="flex h-full min-w-[260px] flex-1 flex-col rounded-2xl border border-line bg-surface-2/60 p-3"
           >
-            <header className="mb-3 px-1">
+            <header className="mb-3 shrink-0 px-1">
               <div className="flex items-center justify-between gap-2">
                 <h3 className="flex items-center gap-2 text-sm font-semibold text-ink">
                   <span className="h-2 w-2 rounded-full" style={{ background: tone }} />
@@ -52,7 +52,7 @@ export default function BoardView({
               </div>
             </header>
 
-            <div className="flex flex-1 flex-col gap-2.5">
+            <div className="flex min-h-0 flex-1 flex-col gap-2.5 overflow-y-auto overscroll-contain">
               {items.length ? (
                 items.map((task) => (
                   <TaskCard

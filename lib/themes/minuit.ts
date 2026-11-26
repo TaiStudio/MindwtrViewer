@@ -1,4 +1,4 @@
-import type { ThemeInput } from "@/lib/types";
+import type { ThemeInput } from "@lib/types";
 
 /** Dark, low-contrast theme. */
 const minuit: ThemeInput = {

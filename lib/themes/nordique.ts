@@ -1,4 +1,4 @@
-import type { ThemeInput } from "@/lib/types";
+import type { ThemeInput } from "@lib/types";
 
 /** Crisp, refreshing Nordic ice theme with cool blue and slate tones. */
 const nordique: ThemeInput = {

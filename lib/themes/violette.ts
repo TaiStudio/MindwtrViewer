@@ -1,4 +1,4 @@
-import type { ThemeInput } from "@/lib/types";
+import type { ThemeInput } from "@lib/types";
 
 /** Luxurious pastel violet and plum theme with soft royal highlights. */
 const violette: ThemeInput = {

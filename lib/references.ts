@@ -143,7 +143,7 @@ export function mergeContexts(
 }
 
 /* ------------------------------------------------------------------ */
-/* Visibility rules from data/config.json (`references` block)         */
+/* Visibility rules from data/config.ts (`references` block)            */
 /* ------------------------------------------------------------------ */
 
 /** `groups.<id>.hidden: true` removes the whole group. */

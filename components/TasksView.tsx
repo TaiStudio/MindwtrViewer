@@ -2,9 +2,9 @@
 
 import { useMemo, useState } from "react";
 
-import { allTags, presentStatuses } from "@/lib/derive";
-import { fmt, formatDate, statusLabel, type ResolvedLocale } from "@/lib/i18n";
-import type { Task } from "@/lib/types";
+import { allTags, presentStatuses } from "@lib/derive";
+import { fmt, formatDate, statusLabel, type ResolvedLocale } from "@lib/i18n";
+import type { Task } from "@lib/types";
 import { EmptyState, ProgressBar, StatusPill, Tag } from "./ui";
 
 export default function TasksView({
@@ -46,9 +46,9 @@ export default function TasksView({
   }
 
   return (
-    <div className="space-y-3">
-      {/* filters */}
-      <div className="card flex flex-wrap items-center gap-2 rounded-2xl p-3">
+    <div className="flex min-h-0 flex-1 flex-col gap-3">
+      {/* filters — outside the scroll region */}
+      <div className="card flex shrink-0 flex-wrap items-center gap-2 rounded-2xl p-3">
         <input
           value={query}
           onChange={(e) => setQuery(e.target.value)}
@@ -100,8 +100,10 @@ export default function TasksView({
         ) : null}
       </div>
 
-      {filtered.length ? (
-        <ul className="card divide-y divide-[var(--c-border)] overflow-hidden rounded-2xl">
+      {/* task list — the only thing that scrolls */}
+      <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
+        {filtered.length ? (
+          <ul className="card divide-y divide-[var(--c-border)] overflow-hidden rounded-2xl">
           {filtered.map((task) => (
             <li key={task.id}>
               <button
@@ -153,10 +155,11 @@ export default function TasksView({
               </button>
             </li>
           ))}
-        </ul>
-      ) : (
-        <EmptyState title={tr.noResults} hint={tr.clearFilters} />
-      )}
+          </ul>
+        ) : (
+          <EmptyState title={tr.noResults} hint={tr.clearFilters} />
+        )}
+      </div>
     </div>
   );
 }

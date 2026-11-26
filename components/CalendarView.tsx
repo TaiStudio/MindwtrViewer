@@ -2,15 +2,15 @@
 
 import { useMemo, useState } from "react";
 
-import { addMonths, dayKey, monthGrid, sameDay } from "@/lib/derive";
+import { addMonths, dayKey, monthGrid, sameDay } from "@lib/derive";
 import {
   formatDate,
   formatMonth,
   intlOf,
   weekStartOf,
   type ResolvedLocale,
-} from "@/lib/i18n";
-import type { Task } from "@/lib/types";
+} from "@lib/i18n";
+import type { Task } from "@lib/types";
 import { EmptyState, ProgressBar, StatusPill, TaskDetail } from "./ui";
 
 type DateField = "createdAt" | "updatedAt";
@@ -68,11 +68,13 @@ export default function CalendarView({
     return <EmptyState title={tr.noTasks} hint={tr.noTasksHint} />;
   }
 
+  // Mobile: the grid itself scrolls. lg: fixed grid, only panels scroll.
   return (
-    <div className="grid gap-4 lg:grid-cols-[1fr_320px]">
-      <section className="card rounded-2xl p-4">
+    <div className="grid h-full min-h-0 gap-4 overflow-y-auto overscroll-contain lg:grid-rows-[minmax(0,1fr)] lg:overflow-hidden lg:grid-cols-[1fr_320px]">
+      {/* Calendar stays fixed; only scrolls if the window is too short. */}
+      <section className="card rounded-2xl p-4 lg:min-h-0 lg:overflow-y-auto">
         <header className="mb-4 flex flex-wrap items-center justify-between gap-3">
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <button
               onClick={() => setCursor((c) => addMonths(c, -1))}
               aria-label={tr.prevMonth}
@@ -80,7 +82,7 @@ export default function CalendarView({
             >
               ‹
             </button>
-            <h3 className="min-w-[160px] text-center text-sm font-semibold capitalize text-ink">
+            <h3 className="min-w-[110px] text-center text-sm font-semibold capitalize text-ink sm:min-w-[160px]">
               {formatMonth(cursor, locale)}
             </h3>
             <button
@@ -117,7 +119,7 @@ export default function CalendarView({
           </div>
         </header>
 
-        <div className="grid grid-cols-7 gap-1">
+        <div className="grid grid-cols-7 gap-0.5 sm:gap-1">
           {weekdays.map((d, i) => (
             <div
               key={`${i}-${d}`}
@@ -138,7 +140,7 @@ export default function CalendarView({
               <button
                 key={key}
                 onClick={() => setSelected(date)}
-                className={`relative flex min-h-[76px] flex-col items-stretch gap-1 rounded-xl border p-1.5 text-left transition-colors ${
+                className={`relative flex min-h-[52px] flex-col items-stretch gap-1 rounded-xl border p-1 text-left transition-colors sm:min-h-[76px] ${
                   isSelected
                     ? "border-accent bg-accent-soft"
                     : "border-transparent hover:border-line hover:bg-surface-2"
@@ -185,17 +187,20 @@ export default function CalendarView({
         </div>
       </section>
 
-      <aside className="card h-fit rounded-2xl p-4">
-        <h3 className="text-sm font-semibold text-ink">
-          {tr.tasksOn} {formatDate(selected, locale)}
-        </h3>
-        <p className="mb-3 mt-1 text-[11px] text-muted">
-          {selectedTasks.length
-            ? `${selectedTasks.length} ${tr.totalTasks}`
-            : tr.noTasksThisDay}
-        </p>
+      {/* Right panel: header fixed, task list scrolls independently on lg. */}
+      <aside className="card flex min-h-0 flex-col rounded-2xl p-4 lg:overflow-hidden">
+        <div className="shrink-0">
+          <h3 className="text-sm font-semibold text-ink">
+            {tr.tasksOn} {formatDate(selected, locale)}
+          </h3>
+          <p className="mb-3 mt-1 text-[11px] text-muted">
+            {selectedTasks.length
+              ? `${selectedTasks.length} ${tr.totalTasks}`
+              : tr.noTasksThisDay}
+          </p>
+        </div>
 
-        <div className="space-y-3">
+        <div className="min-h-0 flex-1 space-y-3 overflow-y-auto overscroll-contain">
           {selectedTasks.length ? (
             selectedTasks.map((task) => (
               <div key={task.id} className="rise rounded-xl border border-line bg-surface p-3">
@@ -224,7 +229,7 @@ export default function CalendarView({
                     {tr.open}
                   </button>
                 </div>
-                <TaskDetail task={task} locale={locale} />
+                {/* <TaskDetail task={task} locale={locale} /> */}
               </div>
             ))
           ) : (

@@ -1,4 +1,4 @@
-import type { ThemeInput } from "@/lib/types";
+import type { ThemeInput } from "@lib/types";
 
 /** Warm autumn theme featuring rich terracotta, amber, and olive tones. */
 const automne: ThemeInput = {

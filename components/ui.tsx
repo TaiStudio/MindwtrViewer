@@ -4,9 +4,9 @@
 
 import { useState, type ReactNode } from "react";
 
-import { attachmentHref, formatBytes, isImageHref, isPdfHref, statusToneVar } from "@/lib/derive";
-import { fmt, formatDate, statusLabel, type ResolvedLocale } from "@/lib/i18n";
-import type { Task } from "@/lib/types";
+import { attachmentHref, formatBytes, isImageHref, isPdfHref, statusToneVar } from "@lib/derive";
+import { fmt, formatDate, statusLabel, type ResolvedLocale } from "@lib/i18n";
+import type { Task } from "@lib/types";
 import Markdown from "./Markdown";
 
 /* ----------------------------- primitives ----------------------------- */

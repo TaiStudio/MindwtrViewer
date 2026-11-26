@@ -1,4 +1,4 @@
-import type { ThemeInput } from "@/lib/types";
+import type { ThemeInput } from "@lib/types";
 
 /** Cool light theme with a classic blue accent. */
 const azur: ThemeInput = {

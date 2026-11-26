@@ -2,8 +2,8 @@
 
 import { useEffect } from "react";
 
-import type { ResolvedLocale } from "@/lib/i18n";
-import type { Task } from "@/lib/types";
+import type { ResolvedLocale } from "@lib/i18n";
+import type { Task } from "@lib/types";
 import { ProgressBar, StatusPill, Tag, TaskDetail } from "./ui";
 
 /**
@@ -89,7 +89,7 @@ export default function TaskModal({
           </span>
         </div>
 
-        <div className="max-h-[calc(100vh-14rem)] overflow-y-auto p-4 sm:p-5">
+        <div className="max-h-[calc(100dvh-14rem)] overflow-y-auto p-4 sm:p-5">
           <TaskDetail task={task} locale={locale} projectTitle={projectTitle} />
         </div>
 

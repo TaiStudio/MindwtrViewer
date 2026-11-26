@@ -1,4 +1,4 @@
-import type { ThemeInput } from "@/lib/types";
+import type { ThemeInput } from "@lib/types";
 
 /** Cyberpunk dark theme with vibrant neon pink and cyan highlights. */
 const cyberpunk: ThemeInput = {

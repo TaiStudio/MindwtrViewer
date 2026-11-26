@@ -1,4 +1,4 @@
-import type { ThemeInput } from "@/lib/types";
+import type { ThemeInput } from "@lib/types";
 
 /** Default theme: modern & minimalist. */
 const moderne: ThemeInput = {

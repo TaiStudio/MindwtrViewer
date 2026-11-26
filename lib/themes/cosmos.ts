@@ -1,4 +1,4 @@
-import type { ThemeInput } from "@/lib/types";
+import type { ThemeInput } from "@lib/types";
 
 /** Deep space theme with rich indigo and cosmic purple accents. */
 const cosmos: ThemeInput = {

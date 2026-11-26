@@ -171,7 +171,7 @@ export interface ThemeDef {
  * defaults to the file name and the palette falls back to the default one.
  *
  * ```ts
- * import type { ThemeInput } from "@/lib/types";
+ * import type { ThemeInput } from "@lib/types";
  * const neon: ThemeInput = { name: "Néon", mode: "dark", colors: { bg: "#05050a" } };
  * export default neon;
  * ```
@@ -189,7 +189,7 @@ export interface AppConfig {
   language: Lang;
   /** Default theme id — must match a file in `lib/themes/`. */
   theme: string;
-  /** Polling interval (ms) used to re-read data/tasks.json & data/config.json */
+  /** Polling interval (ms) used to re-read data/tasks.json & data/config.ts */
   refreshIntervalMs: number;
   calendar: { dateField: "createdAt" | "updatedAt" };
   /** Presentation of the "Références" tab — see `ReferencesConfig`. */
@@ -199,6 +199,24 @@ export interface AppConfig {
   /** Hide tasks carrying `archivedAt`. */
   hideArchived: boolean;
 }
+
+/** Every key optional, recursively — helper for {@link UserConfig}. */
+export type DeepPartial<T> = {
+  [K in keyof T]?: T[K] extends object ? DeepPartial<T[K]> : T[K];
+};
+
+/**
+ * What `data/config.ts` exports (default export): any subset of
+ * {@link AppConfig}. Missing fields fall back to `DEFAULT_CONFIG`
+ * (`lib/defaults.ts`), so a nearly empty file is valid.
+ *
+ * ```ts
+ * import type { UserConfig } from "@lib/types";
+ * const config: UserConfig = { theme: "minuit" };
+ * export default config;
+ * ```
+ */
+export type UserConfig = DeepPartial<AppConfig>;
 
 /** Identifiers of the groups shown in the "Références" tab. */
 export type ReferenceGroupId =
@@ -217,7 +235,7 @@ export interface ReferenceGroupConfig {
   label: string | Record<string, string> | null;
 }
 
-/** `references` block of data/config.json. */
+/** `references` block of data/config.ts. */
 export interface ReferencesConfig {
   /** Tab label. `null` → translated `tabReferences`. */
   label: string | Record<string, string> | null;

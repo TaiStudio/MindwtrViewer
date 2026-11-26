@@ -1,4 +1,4 @@
-import type { ThemeInput } from "@/lib/types";
+import type { ThemeInput } from "@lib/types";
 
 /** Elegant, high-contrast dark theme with emerald green accents. */
 const smaragde: ThemeInput = {

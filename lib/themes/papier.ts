@@ -1,4 +1,4 @@
-import type { ThemeInput } from "@/lib/types";
+import type { ThemeInput } from "@lib/types";
 
 /** Warm cream paper with deep navy ink. */
 const papier: ThemeInput = {

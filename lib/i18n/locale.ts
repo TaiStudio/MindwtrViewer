@@ -5,7 +5,7 @@ import type { Dictionary } from "./dictionary";
  * picked up automatically — no index to update.
  *
  * ```ts
- * import type { Locale } from "@/lib/i18n/locale";
+ * import type { Locale } from "@lib/i18n/locale";
  *
  * const de: Locale = {
  *   code: "de",

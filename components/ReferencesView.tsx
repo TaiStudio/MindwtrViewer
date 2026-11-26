@@ -2,10 +2,10 @@
 
 import { useMemo, type ReactNode } from "react";
 
-import { attachmentHref, isImageHref, overallProgress, plainExcerpt, statusToneVar } from "@/lib/derive";
-import { localized, type ResolvedLocale } from "@/lib/i18n";
-import { isGroupVisible, visibleEntries } from "@/lib/references";
-import type { ReferenceData, ReferencesConfig, SectionRef, Task } from "@/lib/types";
+import { attachmentHref, isImageHref, overallProgress, plainExcerpt, statusToneVar } from "@lib/derive";
+import { localized, type ResolvedLocale } from "@lib/i18n";
+import { isGroupVisible, visibleEntries } from "@lib/references";
+import type { ReferenceData, ReferencesConfig, SectionRef, Task } from "@lib/types";
 import { EmptyState, ProgressBar } from "./ui";
 
 interface Stats {
@@ -94,7 +94,7 @@ export default function ReferencesView({
   /** Unfiltered tasks — drives the context chips so they stay selectable. */
   allTasks: Task[];
   references: ReferenceData;
-  /** `references` block of data/config.json (labels + visibility). */
+  /** `references` block of data/config.ts (labels + visibility). */
   config: ReferencesConfig;
   locale: ResolvedLocale;
   activeContext: string | null;
@@ -259,7 +259,7 @@ export default function ReferencesView({
     return (
       <EmptyState
         title={tr.refNoMatch}
-        hint="data/config.json — references.groups / hideEmpty"
+        hint="data/config.ts — references.groups / hideEmpty"
       />
     );
   }
@@ -267,10 +267,10 @@ export default function ReferencesView({
   /* -------------------------------- render ----------------------------- */
 
   return (
-    <div className="space-y-4">
-      {/* ------------------------- contexts ------------------------- */}
+    <div className="flex min-h-0 flex-1 flex-col gap-4">
+      {/* ------------------------- contexts (fixed top) ------------------------- */}
       {showContexts && contextTokens.length ? (
-        <section className="card rounded-2xl p-4">
+        <section className="card shrink-0 rounded-2xl p-4">
           <header className="mb-3 flex flex-wrap items-baseline justify-between gap-2">
             <h3 className="text-sm font-semibold text-ink">
               {groupLabel("contexts", tr.refContexts)}
@@ -313,6 +313,8 @@ export default function ReferencesView({
         </section>
       ) : null}
 
+      {/* everything else scrolls */}
+      <div className="min-h-0 flex-1 space-y-4 overflow-y-auto overscroll-contain">
       {/* -------------------- reference entries -------------------- */}
       {referenceTasks.length ? (
         <Group title={groupLabel("tasks", tr.refTasks)} count={referenceTasks.length}>
@@ -498,6 +500,7 @@ export default function ReferencesView({
           </div>
         </Group>
       ) : null}
+      </div>
     </div>
   );
 }

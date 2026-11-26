@@ -1,4 +1,4 @@
-import type { ThemeInput } from "@/lib/types";
+import type { ThemeInput } from "@lib/types";
 
 /** Ultra-clean, high-contrast dark theme with a sleek slate finish. */
 const obsidian: ThemeInput = {

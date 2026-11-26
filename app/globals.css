@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 /*
- * Colour tokens are CSS variables set at runtime from data/config.json
+ * Colour tokens are CSS variables set at runtime from data/config.ts
  * (see components/Viewer.tsx). The values below are the "moderne" fallback so
  * the very first paint is already correct.
  */
