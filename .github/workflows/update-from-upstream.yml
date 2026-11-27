@@ -44,20 +44,22 @@ jobs:
         with:
           repository: TaiStudio/MindwtrViewer
           ref: ${{ inputs.ref_upstream }}
-          path: ${{ runner.temp }}/upstream
+          path: upstream-repo
 
-      - name: Copier les fichiers (sans toucher à data/ et public/attachments/)
-        env:
-          UPSTREAM: ${{ runner.temp }}/upstream
+      - name: Copier les fichiers (sans toucher à data/, public/attachments/ et .github/)
         run: |
           set -euo pipefail
-          # --exclude sans --delete-excluded : data/ et public/attachments/ sont
-          # ignorés en écriture ET préservés (jamais supprimés).
+          # --exclude sans --delete-excluded : ces dossiers sont ignorés en
+          # écriture ET préservés (jamais supprimés).
           rsync -a \
-            --exclude='.git/' \
-            --exclude='data/' \
-            --exclude='public/attachments/' \
-            "$UPSTREAM/" ./
+            --exclude='.git' \
+            --exclude='/data/' \
+            --exclude='/public/attachments/' \
+            --exclude='/.github/' \
+            upstream-repo/ ./
+
+          # Le checkout du dépôt principal ne doit pas être committé ni polluer git
+          rm -rf upstream-repo
 
           echo "Fichiers modifiés :"
           git status --short
@@ -65,11 +67,12 @@ jobs:
       - name: Commit et push
         run: |
           set -euo pipefail
-          git add -A
+          git add -A -- . ':(exclude)upstream-repo'
 
           # Toujours préserver les dossiers protégés même si le stage les voit
           git restore --staged -- data 2>/dev/null || true
           git restore --staged -- public/attachments 2>/dev/null || true
+          git restore --staged -- .github 2>/dev/null || true
 
           if git diff --cached --quiet; then
             echo "Aucun changement à mettre à jour."
