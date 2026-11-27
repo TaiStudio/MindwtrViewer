@@ -1,85 +1,97 @@
 # Mindwtr Viewer
 
-Site Next.js pour visualiser `data/tasks.json` sous plusieurs angles : **tableau (kanban)**, **calendrier**, **roadmap**, **liste de tâches** et **références**, avec les avancements (checklists) partout.
+[![Next.js](https://img.shields.io/badge/Next.js-16.4.6-black?logo=next.js&logoColor=white)](https://nextjs.org)
+[![React](https://img.shields.io/badge/React-19.3.0-61DAFB?logo=react&logoColor=white)](https://react.dev)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-4.3.3-06B6D4?logo=tailwindcss&logoColor=white)](https://tailwindcss.com)
+[![ESLint](https://img.shields.io/badge/ESLint-9-4B32C3?logo=eslint&logoColor=white)](https://eslint.org)
+[![pnpm](https://img.shields.io/badge/package%20manager-pnpm-F69220?logo=pnpm&logoColor=white)](https://pnpm.io)
+[![Last commit](https://img.shields.io/github/last-commit/TaiStudio/MindwtrViewer?logo=github)](https://github.com/TaiStudio/MindwtrViewer/commits/main)
+[![Repo](https://img.shields.io/badge/repo-TaiStudio%2FMindwtrViewer-blue?logo=github)](https://github.com/TaiStudio/MindwtrViewer)
+[![Sponsor](https://img.shields.io/github/sponsors/LeGitHubDeTai?logo=githubsponsors&label=Sponsor&color=ea4aaa)](https://github.com/sponsors/LeGitHubDeTai)
 
-Cliquez n'importe quelle tâche (carte, ligne, barre de roadmap, entrée de référence) pour l'ouvrir dans une **modale** : description en **Markdown** rendue proprement (titres, tableaux, listes, liens…), checklist, métadonnées et **pièces jointes** avec aperçu image.
+A Next.js site for viewing `data/tasks.json` from several angles: **board (kanban)**, **calendar**, **roadmap**, **task list** and **references**, with progress (checklists) everywhere.
 
-## Démarrage
+Click any task (card, row, roadmap bar, reference entry) to open it in a **modal**: the **Markdown** description rendered nicely (headings, tables, lists, links…), checklist, metadata and **attachments** with image previews.
+
+> 🇫🇷 French version: [README_fr.md](./README_fr.md)
+
+## Getting started
 
 ```bash
-npm install   # ou pnpm install
+npm install   # or pnpm install
 npm run dev
 ```
 
-Puis ouvrez <http://localhost:3000>.
+Then open <http://localhost:3000>.
 
-## Données dynamiques
+## Dynamic data
 
-Le site relit **`data/tasks.json`** et **`data/config.ts`** à chaque requête de page (`/` et `/api/data`, rendus bloquants donc jamais mis en cache), puis le navigateur rafraîchit automatiquement (par défaut toutes les 4 secondes, et au retour sur l'onglet).
+The site re-reads **`data/tasks.json`** and **`data/config.ts`** on every page request (`/` and `/api/data`, blocking renders so never cached), and the browser refreshes automatically (by default every 4 seconds, and when you come back to the tab).
 
-👉 Vous pouvez modifier `data/tasks.json` à n'importe quel moment : les changements s'affichent seuls, sans redémarrer le serveur.
+👉 You can edit `data/tasks.json` at any time: changes appear on their own, no server restart needed.
 
-`tasks.json` est tolérant sur le format : tableau de `{ tasks: [...] }` (format actuel), objet `{ tasks: [...] }`, tableau plat de tâches, ou `{ projects: [{ tasks }] }`.
+`tasks.json` is format-tolerant: an array of `{ tasks: [...] }` (the current format), an object `{ tasks: [...] }`, a flat array of tasks, or `{ projects: [{ tasks }] }`.
 
-Chaque tâche est affichée avec :
-- son **statut** (`today`, `next`, `someday`, `done`, … — les statuts inconnus sont affichés tels quels),
-- son **avancement** : `checklist` complétée / total, sinon 100 % si le statut est « terminé »,
-- ses dates de création / mise à jour, tags, description, pièces jointes.
+Each task is displayed with:
+- its **status** (`today`, `next`, `someday`, `done`, … — unknown statuses are shown as-is),
+- its **progress**: completed / total checklist, otherwise 100 % if the status is "done",
+- its creation / update dates, tags, description, attachments.
 
 ## Configuration — `data/config.ts`
 
-Fichier **TypeScript typé** : votre éditeur connaît chaque clé (`Ctrl+Espace` pour l'autocomplétion, `Ctrl+Clic` sur un mot pour ouvrir le type `AppConfig` dans `lib/types.ts`). Une clé inconnue ou une mauvaise valeur est soulignée **dans l'éditeur** avant même de sauvegarder.
+A **typed TypeScript file**: your editor knows every key (`Ctrl+Space` for completion, `Ctrl+click` on a word to jump to the `AppConfig` type in `lib/types.ts`). An unknown key or a wrong value is underlined **in the editor** before you even save.
 
 ```ts
 // data/config.ts
 import type { UserConfig } from "@lib/types";
 
 const config: UserConfig = {
-  siteName: "Mindwtr Viewer",            // string ou { fr: …, en: … }
-  language: "fr",                        // code d'une langue de lib/i18n/ — langue par défaut
-  theme: "moderne",                      // id d'un thème de lib/themes/ — thème par défaut
-  refreshIntervalMs: 4000,               // fréquence de rechargement (500–60000)
+  siteName: "Mindwtr Viewer",            // string or { fr: …, en: … }
+  language: "fr",                        // code of a language in lib/i18n/ — default language
+  theme: "moderne",                      // id of a theme in lib/themes/ — default theme
+  refreshIntervalMs: 4000,               // reload frequency (500–60000)
   calendar: { dateField: "updatedAt" },  // "createdAt" | "updatedAt"
 
-  references: {                          // onglet Références (voir ci-dessous)
-    label: null,                         //   nom de l'onglet
-    hideEmpty: true,                     //   masquer groupes vides + entrées à 0 tâche
-    groups: {                            //   un bloc par groupe :
-      tasks:    { hidden: false, label: null },   // Tâches de référence
-      areas:    { hidden: false, label: null },   // Domaines
-      people:   { hidden: false, label: null },   // Personnes
-      projects: { hidden: false, label: null },   // Projets
+  references: {                          // References tab (see below)
+    label: null,                         //   tab name
+    hideEmpty: true,                     //   hide empty groups + entries with 0 tasks
+    groups: {                            //   one block per group:
+      tasks:    { hidden: false, label: null },   // Reference tasks
+      areas:    { hidden: false, label: null },   // Areas
+      people:   { hidden: false, label: null },   // People
+      projects: { hidden: false, label: null },   // Projects
       sections: { hidden: false, label: null },   // Sections
-      contexts: { hidden: false, label: null },   // Contextes
+      contexts: { hidden: false, label: null },   // Contexts
     },
   },
 
-  hideDeleted: true,                     // masquer les tâches avec deletedAt (défaut)
-  hideArchived: false,                   // masquer les tâches avec archivedAt
+  hideDeleted: true,                     // hide tasks with deletedAt (default)
+  hideArchived: false,                   // hide tasks with archivedAt
 };
 
 export default config;
 ```
 
-- Un fichier **vide ou partiel** fonctionne : les valeurs manquantes prennent les défauts internes (`lib/defaults.ts`) — `const config: UserConfig = {}; export default config;` suffit.
-- La sauvegarde suffit : le fichier est relu **à chaque requête** (import natif avec `?v=mtime`, pas de cache), sans redémarrer ni recompiler.
-- **Les langues et les thèmes ne se déclarent plus ici** : ils sont découverts dans les dossiers dédiés (voir ci-dessous). Ce fichier ne fait que choisir les défauts.
-- La langue et le thème choisis dans l'interface sont mémorisés dans le navigateur (`localStorage`) et priment sur `config.ts`.
-- `label` accepte une **chaîne fixe** (`"…"`) ou une **carte par langue** (`{ fr: "…", en: "…" }`) ; `null` garde le libellé traduit des fichiers de langue.
+- An **empty or partial** file works: missing values fall back to the internal defaults (`lib/defaults.ts`) — `const config: UserConfig = {}; export default config;` is enough.
+- Saving is enough: the file is re-read **on every request** (native import with `?v=mtime`, no cache), with no restart and no recompile.
+- **Languages and themes are no longer declared here**: they are discovered in their dedicated folders (see below). This file only picks the defaults.
+- The language and theme chosen in the UI are remembered in the browser (`localStorage`) and override `config.ts`.
+- `label` accepts a **fixed string** (`"…"`) or a **per-language map** (`{ fr: "…", en: "…" }`); `null` keeps the translated label from the language files.
 
-### Exemple : renommer + masquer
+### Example: rename + hide
 
 ```ts
-// data/config.ts (extrait)
+// data/config.ts (excerpt)
 import type { UserConfig } from "@lib/types";
 
 const config: UserConfig = {
   references: {
-    label: { fr: "Bibliothèque", en: "Library" },   // nom de l'onglet
-    hideEmpty: true,                                // rien d'affiché à 0
+    label: { fr: "Bibliothèque", en: "Library" },   // tab name
+    hideEmpty: true,                                // nothing shown at 0
     groups: {
-      people:   { hidden: true },                   // groupe masqué
-      projects: { label: { fr: "Projets de jeu" } } // groupe renommé
+      people:   { hidden: true },                   // group hidden
+      projects: { label: { fr: "Game projects" } }  // group renamed
     }
   }
 };
@@ -87,149 +99,149 @@ const config: UserConfig = {
 export default config;
 ```
 
-Chaque `label` de groupe suit la même règle que l'onglet : `null` → libellé traduit (`refAreas`, `refPeople`, …).
+Each group `label` follows the same rule as the tab: `null` → translated label (`refAreas`, `refPeople`, …).
 
-## Onglet Références
+## References tab
 
-Six groupes issus de `data/tasks.json`, avec nombre de tâches et avancement :
+Six groups coming from `data/tasks.json`, with task count and progress:
 
-| groupe | id de config | source | compté par |
+| group | config id | source | counted by |
 | --- | --- | --- | --- |
-| **Tâches de référence** | `tasks` | tâches au statut `reference` | clic → modale de la tâche |
-| **Contextes** | `contexts` | `settings.taxonomy.contexts` ∪ contextes employés par les tâches | clic → filtre global |
-| **Domaines** | `areas` | `areas[]` | `task.areaId`, ou `project.areaId` de son projet |
-| **Personnes** | `people` | `people[]` | `task.assignedTo` (même nom) |
-| **Projets** | `projects` | `projects[]` | `task.projectId` — chaque projet liste ses sections |
-| **Sections** | `sections` | `sections[]` | `task.sectionId`, regroupées par projet |
+| **Reference tasks** | `tasks` | tasks with status `reference` | click → task modal |
+| **Contexts** | `contexts` | `settings.taxonomy.contexts` ∪ contexts used by tasks | click → global filter |
+| **Areas** | `areas` | `areas[]` | `task.areaId`, or its project's `project.areaId` |
+| **People** | `people` | `people[]` | `task.assignedTo` (same name) |
+| **Projects** | `projects` | `projects[]` | `task.projectId` — each project lists its sections |
+| **Sections** | `sections` | `sections[]` | `task.sectionId`, grouped by project |
 
-Deux règles de visibilité, réglables dans `references` :
+Two visibility rules, configurable in `references`:
 
-- **`groups.<id>.hidden: true`** → le groupe entier disparaît.
-- **`hideEmpty: true`** → un groupe **vide** disparaît, et dans chaque groupe une **entrée à 0 tâche** disparaît aussi (un projet sans tâche, un contexte inutilisé…). Un projet ne gardant plus que des sections vides disparaît lui aussi.
+- **`groups.<id>.hidden: true`** → the whole group disappears.
+- **`hideEmpty: true`** → an **empty group** disappears, and within each group an **entry with 0 tasks** disappears too (a project without tasks, an unused context…). A project left with only empty sections disappears as well.
 
-## Filtre par contexte
+## Context filter
 
-Le sélecteur **Contexte** de l'en-tête (à côté du thème) filtre **toutes les vues** : tableau, calendrier, roadmap, tâches et références. Le choix est mémorisé dans le navigateur.
+The **Context** selector in the header (next to the theme) filters **every view**: board, calendar, roadmap, tasks and references. The choice is remembered in the browser.
 
-Depuis l'onglet Références, cliquer une pastille de contexte active le même filtre (recliquer la désactive).
+From the References tab, clicking a context chip toggles the same filter (click again to clear it).
 
-## Modale de tâche, Markdown, pièces jointes
+## Task modal, Markdown, attachments
 
-- **Modale** : chaque tâche est cliquable (cartes du tableau, lignes des tâches, barres de la roadmap, entrées « Tâches de référence ») et s'ouvre dans une fenêtre modale — `Échap`, la croix ou le clic en dehors la ferment.
-- **Markdown** : la `description` est interprétée par un rendu maison (`components/Markdown.tsx`, aucun `dangerouslySetInnerHTML`) — titres, tableaux, listes imbriquées, citations, code, liens, images et front-matter YAML.
-- **Pièces jointes** : les fichiers déclarés dans `tasks.json` sont servis depuis **`public/`** (`cloudKey` → `/attachments/…`, les `uri` externes tels quels). Les images ont un aperçu, les PDF un badge ; un fichier absent de `public/` affiche un badge « manquant » au lieu d'une image cassée. Copiez vos fichiers dans `public/attachments/` — ils apparaissent sans redémarrer.
+- **Modal**: every task is clickable (board cards, task rows, roadmap bars, "Reference tasks" entries) and opens in a modal window — `Esc`, the ✕ button or clicking outside closes it.
+- **Markdown**: the `description` is interpreted by a custom renderer (`components/Markdown.tsx`, no `dangerouslySetInnerHTML`) — headings, tables, nested lists, quotes, code, links, images and YAML front-matter.
+- **Attachments**: files declared in `tasks.json` are served from **`public/`** (`cloudKey` → `/attachments/…`, external `uri`s as-is). Images get a preview, PDFs a badge; a file missing from `public/` shows a "missing" badge instead of a broken image. Copy your files into `public/attachments/` — they show up without a restart.
 
-## Tâches supprimées / archivées
+## Deleted / archived tasks
 
-- **`hideDeleted: true`** (défaut) : les tâches portant `deletedAt` n'apparaissent dans **aucune** vue. Passez-le à `false` pour les afficher quand même.
-- **`hideArchived: false`** (défaut) : idem pour `archivedAt` si vous activez cette option.
+- **`hideDeleted: true`** (default): tasks with `deletedAt` do not appear in **any** view. Set it to `false` to show them anyway.
+- **`hideArchived: false`** (default): same for `archivedAt` if you enable this option.
 
-## Ajouter une langue — `lib/i18n/*.ts`
+## Adding a language — `lib/i18n/*.ts`
 
-**Créez un fichier, c'est tout.** Aucun index à mettre à jour : le serveur relit le dossier à chaque requête et le nouveau fichier apparaît dans le sélecteur de langue à la prochaine actualisation.
+**Create a file, that's it.** No index to update: the server re-reads the folder on every request and the new file appears in the language selector on the next refresh.
 
-> Les deux dossiers sont lus **à chaque requête**, jamais mis en cache : créer un fichier, en supprimer un, ou **modifier le contenu d'un fichier existant** (une couleur, une traduction…) est pris en compte sans redémarrer ni recompiler.
+> Both folders are read **on every request**, never cached: creating a file, deleting one, or **editing the contents of an existing file** (a color, a translation…) is picked up without restarting or recompiling.
 
 ```ts
 // lib/i18n/de.ts
 import type { Locale } from "@lib/i18n/locale";
 
 const de: Locale = {
-  code: "de",            // doit correspondre au nom du fichier
-  name: "Deutsch",       // affiché dans le sélecteur
-  intl: "de-DE",         // formatage des dates/ nombres (défaut : code)
-  weekStart: 1,          // 0 = dimanche, 1 = lundi (défaut : 1)
+  code: "de",            // must match the file name
+  name: "Deutsch",       // shown in the selector
+  intl: "de-DE",         // date/number formatting (default: code)
+  weekStart: 1,          // 0 = Sunday, 1 = Monday (default: 1)
   dict: {
     tabBoard: "Board",
     tabCalendar: "Kalender",
-    // … un sous-ensemble suffit
+    // … a subset is enough
   },
 };
 
 export default de;
 ```
 
-- Les clés manquantes **tombent automatiquement sur l'anglais** : un fichier peut commencer avec 3 chaînes.
-- La liste des clés est dans `lib/i18n/dictionary.ts`. Pour une nouvelle chaîne d'interface : ajoutez la clé là, puis sa traduction dans chaque fichier de langue.
-- `lib/i18n/{index,locale,dictionary}.ts` sont réservés à l'infrastructure et ignorés par la découverte.
+- Missing keys **fall back to English automatically**: a file can start with 3 strings.
+- The list of keys is in `lib/i18n/dictionary.ts`. For a new UI string: add the key there, then its translation in each language file.
+- `lib/i18n/{index,locale,dictionary}.ts` are infrastructure and ignored by discovery.
 
-## Ajouter un thème — `lib/themes/*.ts`
+## Adding a theme — `lib/themes/*.ts`
 
-Même principe : **créez le fichier, c'est tout.**
+Same principle: **create the file, that's it.**
 
 ```ts
 // lib/themes/neon.ts
 import type { ThemeInput } from "@lib/types";
 
 const neon: ThemeInput = {
-  name: { fr: "Néon", en: "Neon" },   // chaîne simple possible aussi
+  name: { fr: "Néon", en: "Neon" },   // a plain string works too
   mode: "dark",                        // "light" | "dark"
-  colors: { bg: "#05050a", accent: "#22d3ee" }, // partial : le reste prend le thème par défaut
+  colors: { bg: "#05050a", accent: "#22d3ee" }, // partial: the rest takes the default theme
 };
 
 export default neon;
 ```
 
-- Seul `colors` est requis. L'`id` vaut le nom du fichier, `mode` vaut `"light"` par défaut.
-- Les couleurs non fournies sont complétées par une palette de repli : un fichier de 2 lignes suffit.
-- Les jetons disponibles : `bg`, `surface`, `surface2`, `border`, `text`, `textMuted`, `accent`, `accentText`, `accentSoft`, `success`, `warning`, `danger`, `info`, `shadow` → variables CSS `--c-bg`, `--c-text-muted`, …
+- Only `colors` is required. The `id` is the file name, `mode` defaults to `"light"`.
+- Missing colors are filled in from a fallback palette: a 2-line file is enough.
+- Available tokens: `bg`, `surface`, `surface2`, `border`, `text`, `textMuted`, `accent`, `accentText`, `accentSoft`, `success`, `warning`, `danger`, `info`, `shadow` → CSS variables `--c-bg`, `--c-text-muted`, …
 
-### Thèmes livrés
+### Bundled themes
 
-| fichier | nom |
+| file | name |
 | --- | --- |
-| `moderne.ts` | Moderne & minimaliste (**défaut**, clair) |
-| `minuit.ts` | Minuit (sombre) |
-| `aurore.ts` | Aurore (doux, accent terracotta) |
+| `moderne.ts` | Modern & minimalist (**default**, light) |
+| `minuit.ts` | Midnight (dark) |
+| `aurore.ts` | Aurora (soft, terracotta accent) |
 
-### Langues livrées
+### Bundled languages
 
-| fichier | nom |
+| file | name |
 | --- | --- |
-| `fr.ts` | Français (**défaut**) |
-| `en.ts` | English (repli de toutes les autres langues) |
+| `fr.ts` | French (**default**) |
+| `en.ts` | English (fallback for all other languages) |
 
 ## Structure
 
 ```
 app/
-  page.tsx            # rendu bloquant : lit data/tasks.json + data/config.ts → <Viewer />
-  layout.tsx          # polices Geist + métadonnées
-  globals.css         # variables de couleur pilotées par le thème
-  api/data/route.ts   # relit data/tasks.json + data/config.ts (jamais mis en cache)
+  page.tsx            # blocking render: reads data/tasks.json + data/config.ts → <Viewer />
+  layout.tsx          # Geist fonts + metadata
+  globals.css         # color variables driven by the theme
+  api/data/route.ts   # re-reads data/tasks.json + data/config.ts (never cached)
 components/
-  Viewer.tsx          # en-tête, onglets, thème, langue, filtre contexte, rafraîchissement auto, modale de tâche
-  BoardView.tsx       # kanban par statut + avancement par colonne
-  CalendarView.tsx    # mois complet, tâches par jour, panneau latéral
-  RoadmapView.tsx     # timeline horizontale (barres création → mise à jour)
-  TasksView.tsx       # liste filtrable (recherche, statut, étiquettes)
-  ReferencesView.tsx  # références, domaines, personnes, projets, sections, contextes
-  TaskModal.tsx       # modale de tâche (Échap / croix / clic extérieur)
-  Markdown.tsx        # rendu Markdown (titres, tableaux, listes, liens…)
-  ui.tsx              # barres d'avancement, pastilles, cartes, détails, pièces jointes
+  Viewer.tsx          # header, tabs, theme, language, context filter, auto refresh, task modal
+  BoardView.tsx       # kanban by status + progress per column
+  CalendarView.tsx    # full month, tasks per day, side panel
+  RoadmapView.tsx     # horizontal timeline (bars from creation → update)
+  TasksView.tsx       # filterable list (search, status, tags)
+  ReferencesView.tsx  # references, areas, people, projects, sections, contexts
+  TaskModal.tsx       # task modal (Esc / ✕ / click outside)
+  Markdown.tsx        # Markdown rendering (headings, tables, lists, links…)
+  ui.tsx              # progress bars, chips, cards, details, attachments
 data/
-  config.ts           # configuration typée (UserConfig) — éditable à chaud
-  tasks.json          # les données (format tolérant)
+  config.ts           # typed configuration (UserConfig) — hot-editable
+  tasks.json          # the data (tolerant format)
 lib/
-  data.ts             # lecture disque de data/ + découverte des langues/thèmes
-  discover.ts         # scan de lib/i18n/ et lib/themes/ (nouveau fichier = nouvelle entrée)
-  derive.ts           # normalisation des tâches, statuts, dates, filtres, agrégats
-  references.ts       # extraction de areas/people/projects/sections/contextes
-  defaults.ts         # config par défaut + fusion avec data/config.ts
-  prefs.ts            # langue / thème / vue / contexte mémorisés (localStorage)
-  types.ts            # types partagés (ThemeInput, DataSet, ReferenceData, …)
+  data.ts             # disk reading of data/ + language/theme discovery
+  discover.ts         # scan of lib/i18n/ and lib/themes/ (new file = new entry)
+  derive.ts           # task normalization, statuses, dates, filters, aggregates
+  references.ts       # extraction of areas/people/projects/sections/contexts
+  defaults.ts         # default config + merge with data/config.ts
+  prefs.ts            # remembered language / theme / view / context (localStorage)
+  types.ts            # shared types (ThemeInput, DataSet, ReferenceData, …)
   i18n/
-    dictionary.ts     # toutes les clés de texte de l'interface
-    locale.ts         # types Locale / ResolvedLocale
+    dictionary.ts     # all UI text keys
+    locale.ts         # Locale / ResolvedLocale types
     index.ts          # formatDate, formatMonth, statusLabel, fmt, resolveDict…
-    fr.ts             # Français (défaut)
-    en.ts             # English (repli)
+    fr.ts             # French (default)
+    en.ts             # English (fallback)
   themes/
-    moderne.ts        # thème par défaut
-    minuit.ts         # sombre
-    aurore.ts         # doux
+    moderne.ts        # default theme
+    minuit.ts         # dark
+    aurore.ts         # soft
 ```
 
-## Vue roadmap
+## Roadmap view
 
-Faute de dates d'échéance dans `tasks.json`, chaque barre couvre **`createdAt` → `updatedAt`**, sa couleur vient du statut et son **remplissage = avancement de la checklist**. Les lignes (lanes) sont les statuts, avec un avancement moyen par statut et un repère « aujourd'hui ».
+Since `tasks.json` has no due dates, each bar covers **`createdAt` → `updatedAt`**, its color comes from the status and its **fill = checklist progress**. The lanes are the statuses, with an average progress per status and a "today" marker.
