@@ -1,0 +1,82 @@
+name: Mettre à jour depuis le dépôt principal
+
+# Déclenchement manuel uniquement
+on:
+  workflow_dispatch:
+    inputs:
+      ref_upstream:
+        description: "Branche ou tag du dépôt principal à récupérer"
+        required: false
+        default: "main"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: update-from-upstream
+  cancel-in-progress: false
+
+jobs:
+  update:
+    name: Copier les fichiers du dépôt principal
+    runs-on: ubuntu-latest
+    # Ne rien faire si ce dépôt EST le dépôt principal
+    if: github.repository != 'TaiStudio/MindwtrViewer'
+    steps:
+      - name: Vérifier que ce dépôt n'est pas le dépôt principal
+        run: |
+          echo "Dépôt actuel : ${{ github.repository }}"
+          echo "Dépôt principal : TaiStudio/MindwtrViewer"
+
+      - name: Vérifier l'état de la branche cible
+        if: github.ref_type != 'branch'
+        run: |
+          echo "::error::Ce workflow doit être lancé depuis une branche (ref actuelle : ${{ github.ref }})."
+          exit 1
+
+      - name: Checkout du dépôt actuel
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Checkout du dépôt principal
+        uses: actions/checkout@v4
+        with:
+          repository: TaiStudio/MindwtrViewer
+          ref: ${{ inputs.ref_upstream }}
+          path: ${{ runner.temp }}/upstream
+
+      - name: Copier les fichiers (sans toucher à data/ et public/attachments/)
+        env:
+          UPSTREAM: ${{ runner.temp }}/upstream
+        run: |
+          set -euo pipefail
+          # --exclude sans --delete-excluded : data/ et public/attachments/ sont
+          # ignorés en écriture ET préservés (jamais supprimés).
+          rsync -a \
+            --exclude='.git/' \
+            --exclude='data/' \
+            --exclude='public/attachments/' \
+            "$UPSTREAM/" ./
+
+          echo "Fichiers modifiés :"
+          git status --short
+
+      - name: Commit et push
+        run: |
+          set -euo pipefail
+          git add -A
+
+          # Toujours préserver les dossiers protégés même si le stage les voit
+          git restore --staged -- data 2>/dev/null || true
+          git restore --staged -- public/attachments 2>/dev/null || true
+
+          if git diff --cached --quiet; then
+            echo "Aucun changement à mettre à jour."
+            exit 0
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "chore: mise à jour depuis TaiStudio/MindwtrViewer"
+          git push origin "HEAD:${{ github.ref_name }}"
