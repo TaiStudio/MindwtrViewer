@@ -254,6 +254,32 @@ export const STATUS_ORDER = [
   "cancelled",
 ];
 
+/**
+ * Status order used by the Tasks tab list: next action → waiting → someday →
+ * done → reference. Statuses not listed here sort after all of them.
+ */
+export const TASK_STATUS_ORDER: readonly string[] = [
+  "next",
+  "waiting",
+  "someday",
+  "done",
+  "completed",
+  "reference",
+];
+
+/** Rank of a status inside `TASK_STATUS_ORDER` (unknown statuses rank last). */
+export function statusRank(status: string): number {
+  const i = TASK_STATUS_ORDER.indexOf(status);
+  return i === -1 ? TASK_STATUS_ORDER.length : i;
+}
+
+/** Tasks-tab ordering: status rank first, then manual order, then title. */
+export function compareTasksInList(a: Task, b: Task): number {
+  const byStatus = statusRank(a.status) - statusRank(b.status);
+  if (byStatus !== 0) return byStatus;
+  return a.order - b.order || a.title.localeCompare(b.title);
+}
+
 /** Semantic colour token used for a status. */
 export function statusTone(status: string): string {
   const key = status.toLowerCase();

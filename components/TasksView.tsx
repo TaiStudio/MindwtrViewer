@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 
-import { allTags, presentStatuses } from "@lib/derive";
+import { allTags, compareTasksInList, presentStatuses } from "@lib/derive";
 import { fmt, formatDate, statusLabel, type ResolvedLocale } from "@lib/i18n";
 import type { Task } from "@lib/types";
 import { EmptyState, ProgressBar, StatusPill, Tag } from "./ui";
@@ -27,16 +27,18 @@ export default function TasksView({
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
-    return tasks.filter((task) => {
-      if (status !== "all" && task.status !== status) return false;
-      if (tag !== "all" && !task.tags.includes(tag)) return false;
-      if (!q) return true;
-      return (
-        task.title.toLowerCase().includes(q) ||
-        (task.description ?? "").toLowerCase().includes(q) ||
-        task.checklist.some((c) => c.title.toLowerCase().includes(q))
-      );
-    });
+    return tasks
+      .filter((task) => {
+        if (status !== "all" && task.status !== status) return false;
+        if (tag !== "all" && !task.tags.includes(tag)) return false;
+        if (!q) return true;
+        return (
+          task.title.toLowerCase().includes(q) ||
+          (task.description ?? "").toLowerCase().includes(q) ||
+          task.checklist.some((c) => c.title.toLowerCase().includes(q))
+        );
+      })
+      .sort(compareTasksInList);
   }, [tasks, query, status, tag]);
 
   const hasFilters = query !== "" || status !== "all" || tag !== "all";
